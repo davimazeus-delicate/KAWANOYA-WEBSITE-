@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Kawanoya — Manager Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Zen+Kaku+Gothic+New:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0d0d0d;--ink2:#111;--ink3:#181612;--cream:#f5f0e8;
+  --red:#8b1a1a;--red2:#b52626;--gold:#c9a84c;--gold2:#e8c97a;
+  --green:#2d6a4f;--green2:#6fcf97;--blue:#1a3a6b;--blue2:#7eb8f7;
+  --gray:rgba(245,240,232,.35);
+  --serif:'Cormorant Garamond',serif;--sans:'Zen Kaku Gothic New',sans-serif;
+  --sidebar:240px;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:#0a0a0a;color:var(--cream);min-height:100vh}
+
+/* ── AUTH SCREENS ─────────────────────────── */
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;background:radial-gradient(ellipse at 30% 50%,rgba(201,168,76,.06),transparent 60%),radial-gradient(ellipse at 70% 20%,rgba(139,26,26,.06),transparent 50%),#0a0a0a}
+.auth-box{width:100%;max-width:460px}
+.auth-brand{text-align:center;margin-bottom:2rem}
+.auth-brand-logo{font-family:var(--serif);font-size:2.2rem;color:var(--gold);font-weight:300;letter-spacing:.04em}
+.auth-brand-sub{font-size:.6rem;letter-spacing:.28em;text-transform:uppercase;color:rgba(245,240,232,.25);margin-top:.3rem}
+.auth-card{background:#111;border:1px solid rgba(201,168,76,.15);padding:2.5rem}
+.auth-title{font-family:var(--serif);font-size:1.6rem;color:var(--cream);font-weight:300;margin-bottom:.3rem}
+.auth-sub{font-size:.75rem;color:rgba(245,240,232,.3);margin-bottom:1.8rem;line-height:1.6}
+.auth-tabs{display:flex;border-bottom:1px solid rgba(245,240,232,.07);margin-bottom:1.8rem}
+.auth-tab{flex:1;padding:.7rem;text-align:center;background:none;border:none;font-family:var(--sans);font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(245,240,232,.3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.auth-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.form-group{margin-bottom:.9rem}
+.form-label{display:block;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:rgba(245,240,232,.4);margin-bottom:.4rem}
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-bottom:.9rem}
+.auth-input{width:100%;background:rgba(245,240,232,.04);border:1px solid rgba(245,240,232,.1);color:var(--cream);padding:.8rem 1rem;font-family:var(--sans);font-size:.88rem;outline:none;transition:border-color .2s}
+.auth-input:focus{border-color:var(--gold)}
+.auth-input::placeholder{color:rgba(245,240,232,.18)}
+.pw-wrap{position:relative}
+.pw-wrap .auth-input{padding-right:2.8rem}
+.pw-eye{position:absolute;right:.9rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(245,240,232,.3);transition:color .2s;display:flex;align-items:center}
+.pw-eye:hover{color:var(--gold)}
+.auth-btn{width:100%;padding:.9rem;background:var(--gold);color:var(--ink);border:none;font-family:var(--sans);font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;font-weight:500;transition:background .2s;margin-top:.3rem}
+.auth-btn:hover{background:var(--gold2)}
+.auth-btn:disabled{opacity:.5;cursor:not-allowed}
+.auth-err{font-size:.75rem;color:#e06060;margin-top:.6rem;min-height:1.1rem;line-height:1.5}
+.auth-success{font-size:.78rem;color:var(--green2);margin-top:.6rem;line-height:1.6;background:rgba(45,106,79,.1);padding:.7rem .9rem;border:1px solid rgba(107,207,107,.15)}
+.forgot-link{display:block;text-align:center;font-size:.7rem;color:rgba(245,240,232,.3);margin-top:1rem;cursor:pointer;transition:color .2s;text-decoration:none}
+.forgot-link:hover{color:var(--gold)}
+.auth-pending{text-align:center;padding:1.5rem;background:rgba(201,168,76,.05);border:1px solid rgba(201,168,76,.15)}
+.auth-pending-icon{font-size:2.5rem;margin-bottom:.7rem}
+.auth-pending-title{font-family:var(--serif);font-size:1.3rem;color:var(--gold);font-weight:300;margin-bottom:.5rem}
+.auth-pending-msg{font-size:.78rem;color:rgba(245,240,232,.45);line-height:1.7}
+
+/* ── FORGOT PASSWORD ─────────────────────── */
+.forgot-screen{display:none}
+.back-link{font-size:.68rem;color:rgba(245,240,232,.3);cursor:pointer;margin-bottom:1.5rem;display:inline-flex;align-items:center;gap:.4rem;transition:color .2s}
+.back-link:hover{color:var(--gold)}
+
+/* ── DASHBOARD LAYOUT ────────────────────── */
+#dashboard{display:none;min-height:100vh}
+.sidebar{width:var(--sidebar);background:var(--ink2);border-right:1px solid rgba(245,240,232,.06);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;transition:transform .3s}
+.sidebar-logo{padding:1.3rem 1.2rem;border-bottom:1px solid rgba(245,240,232,.06)}
+.sidebar-logo-main{font-family:var(--serif);font-size:1.2rem;color:var(--gold);font-weight:300}
+.sidebar-logo-sub{font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(245,240,232,.2);margin-top:.15rem}
+.sidebar-user{padding:.9rem 1.2rem;border-bottom:1px solid rgba(245,240,232,.06);display:flex;align-items:center;gap:.7rem}
+.user-avatar{width:34px;height:34px;background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.25);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:1rem;color:var(--gold);flex-shrink:0}
+.user-name{font-size:.78rem;color:var(--cream);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-role{font-size:.6rem;color:rgba(245,240,232,.3);letter-spacing:.1em;text-transform:uppercase}
+.sidebar-nav{flex:1;padding:.8rem 0;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:.75rem;padding:.72rem 1.2rem;cursor:pointer;font-size:.76rem;color:rgba(245,240,232,.38);transition:all .2s;border:none;background:none;width:100%;text-align:left;font-family:var(--sans);border-left:2px solid transparent}
+.nav-item:hover{color:var(--cream);background:rgba(245,240,232,.04);border-left-color:rgba(201,168,76,.3)}
+.nav-item.active{color:var(--gold);background:rgba(201,168,76,.07);border-left-color:var(--gold)}
+.nav-icon{font-size:.95rem;width:18px;text-align:center;flex-shrink:0}
+.nav-badge{background:var(--red);color:#fff;font-size:.55rem;padding:.1rem .42rem;border-radius:10px;margin-left:auto;font-weight:700;display:none}
+.nav-badge.show{display:inline}
+.sidebar-foot{padding:1rem 1.2rem;border-top:1px solid rgba(245,240,232,.06)}
+.logout-btn{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(245,240,232,.22);background:none;border:none;cursor:pointer;font-family:var(--sans);transition:color .2s;padding:0}
+.logout-btn:hover{color:var(--red)}
+
+.main-area{margin-left:var(--sidebar);flex:1;min-height:100vh}
+.topbar{padding:1.1rem 1.8rem;border-bottom:1px solid rgba(245,240,232,.06);display:flex;align-items:center;justify-content:space-between;background:var(--ink2);position:sticky;top:0;z-index:50}
+.topbar-left{display:flex;flex-direction:column}
+.topbar-title{font-family:var(--serif);font-size:1.3rem;color:var(--cream);font-weight:300}
+.topbar-sub{font-size:.62rem;letter-spacing:.13em;text-transform:uppercase;color:rgba(245,240,232,.28);margin-top:.12rem}
+.topbar-right{display:flex;align-items:center;gap:.7rem}
+.refresh-btn{background:none;border:1px solid rgba(201,168,76,.22);color:var(--gold);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;padding:.42rem .85rem;cursor:pointer;font-family:var(--sans);transition:all .2s}
+.refresh-btn:hover{background:var(--gold);color:var(--ink)}
+.page-body{padding:1.8rem}
+.page{display:none}
+.page.active{display:block}
+
+/* ── STAT CARDS ──────────────────────────── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.9rem;margin-bottom:1.8rem}
+.stat-card{background:var(--ink2);border:1px solid rgba(245,240,232,.07);padding:1.3rem;position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card.s1::after{background:var(--gold)}
+.stat-card.s2::after{background:var(--blue2)}
+.stat-card.s3::after{background:var(--green2)}
+.stat-card.s4::after{background:#e06060}
+.stat-num{font-family:var(--serif);font-size:2.2rem;color:var(--cream);font-weight:300;line-height:1}
+.stat-label{font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(245,240,232,.3);margin-top:.35rem}
+.stat-sub{font-size:.68rem;color:var(--gold);margin-top:.2rem}
+.stat-icon{position:absolute;top:1rem;right:1rem;font-size:1.5rem;opacity:.18}
+
+/* ── NOTIFICATION / ORDER CARDS ──────────── */
+.section-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem}
+.section-title{font-family:var(--serif);font-size:1.15rem;color:var(--cream);font-weight:300}
+.filter-row{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem}
+.flt-btn{font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;padding:.38rem .8rem;border:1px solid rgba(245,240,232,.1);color:rgba(245,240,232,.38);background:none;cursor:pointer;font-family:var(--sans);transition:all .2s}
+.flt-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.07)}
+.order-card{background:var(--ink2);border:1px solid rgba(245,240,232,.06);padding:1.1rem;margin-bottom:.75rem;border-left:3px solid rgba(245,240,232,.08);transition:all .2s}
+.order-card:hover{border-color:rgba(201,168,76,.2)}
+.order-card.is-order{border-left-color:var(--gold)}
+.order-card.is-reservation{border-left-color:var(--blue2)}
+.order-card.is-done{border-left-color:var(--green2);opacity:.6}
+.oc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;margin-bottom:.45rem;flex-wrap:wrap}
+.oc-id{font-family:var(--serif);font-size:.95rem;color:var(--gold);font-weight:300}
+.oc-time{font-size:.62rem;color:rgba(245,240,232,.28)}
+.oc-customer{font-size:.75rem;color:var(--gold);margin-bottom:.3rem}
+.oc-items{font-size:.78rem;color:rgba(245,240,232,.55);line-height:1.55;font-weight:300;margin-bottom:.5rem}
+.oc-foot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+.oc-total{font-family:var(--serif);font-size:1.05rem;color:var(--cream)}
+.oc-actions{display:flex;gap:.4rem;flex-wrap:wrap}
+.oc-btn{font-size:.6rem;letter-spacing:.11em;text-transform:uppercase;padding:.35rem .75rem;border:1px solid rgba(245,240,232,.1);color:rgba(245,240,232,.4);background:none;cursor:pointer;font-family:var(--sans);transition:all .2s}
+.oc-btn:hover{border-color:var(--gold);color:var(--gold)}
+.oc-btn.confirm:hover{border-color:var(--green2);color:var(--green2)}
+.oc-btn.reject:hover{border-color:var(--red);color:#e06060}
+.badge{display:inline-flex;align-items:center;font-size:.57rem;letter-spacing:.11em;text-transform:uppercase;padding:.16rem .5rem}
+.bdg-order{background:rgba(201,168,76,.12);color:var(--gold)}
+.bdg-res{background:rgba(26,58,107,.2);color:var(--blue2)}
+.bdg-delivery{background:rgba(45,106,79,.18);color:var(--green2)}
+.bdg-pickup{background:rgba(139,26,26,.18);color:#e06060}
+.bdg-new{background:rgba(201,168,76,.1);color:var(--gold)}
+.bdg-done{background:rgba(45,106,79,.1);color:var(--green2)}
+.empty-state{text-align:center;padding:2.5rem;color:rgba(245,240,232,.22);font-size:.82rem;font-weight:300;line-height:1.8}
+.empty-icon{font-size:2.5rem;margin-bottom:.6rem;opacity:.4;display:block}
+
+/* ── DISH EDITOR ─────────────────────────── */
+.editor-card{background:rgba(245,240,232,.03);border:1px solid rgba(245,240,232,.06);padding:1rem;margin-bottom:.8rem}
+.editor-card:hover{border-color:rgba(201,168,76,.15)}
+.ec-top{display:flex;gap:.9rem;margin-bottom:.75rem}
+.ec-img-wrap{position:relative;flex-shrink:0;cursor:pointer;width:68px;height:68px}
+.ec-img,.ec-ph{width:68px;height:68px;object-fit:cover;display:block;background:#1a1008}
+.ec-ph{display:flex;align-items:center;justify-content:center;font-size:1.6rem}
+.ec-overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);text-align:center}
+.ec-img-wrap:hover .ec-overlay{opacity:1}
+.ec-fields{flex:1;display:flex;flex-direction:column;gap:.42rem}
+.ec-row{display:flex;gap:.45rem}
+.ec-actions{display:flex;justify-content:flex-end;gap:.45rem;margin-top:.55rem}
+.mgr-input{width:100%;background:rgba(245,240,232,.04);border:1px solid rgba(245,240,232,.08);color:var(--cream);padding:.6rem .85rem;font-family:var(--sans);font-size:.82rem;outline:none;transition:border-color .2s}
+.mgr-input:focus{border-color:var(--gold)}
+.mgr-input::placeholder{color:rgba(245,240,232,.16)}
+textarea.mgr-input{resize:vertical;min-height:72px}
+.btn{display:inline-flex;align-items:center;gap:.4rem;padding:.65rem 1.3rem;font-family:var(--sans);font-size:.65rem;font-weight:400;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;transition:all .22s;border:none}
+.btn-gold{background:var(--gold);color:var(--ink)}.btn-gold:hover{background:var(--gold2)}
+.btn-outline{background:transparent;color:var(--cream);border:1px solid rgba(245,240,232,.18)}.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.btn-green{background:rgba(45,106,79,.25);color:var(--green2);border:1px solid rgba(107,207,107,.18)}.btn-green:hover{background:rgba(45,106,79,.45)}
+.btn-sm{padding:.4rem .85rem;font-size:.6rem}
+.btn-full{width:100%;justify-content:center;margin-top:.5rem}
+.upload-zone{border:1px dashed rgba(201,168,76,.18);padding:1.1rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;margin-bottom:.7rem}
+.upload-zone:hover{border-color:var(--gold);background:rgba(201,168,76,.03)}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+.sep{height:1px;background:rgba(245,240,232,.06);margin:1.4rem 0}
+.add-panel{border:1px dashed rgba(201,168,76,.18);padding:1.1rem;background:rgba(201,168,76,.02);margin-bottom:1rem}
+.add-panel-title{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:.8rem}
+.cat-label{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);padding:.4rem 0;border-bottom:1px solid rgba(201,168,76,.12);margin-bottom:.7rem;margin-top:.5rem}
+
+/* ── DAILY SALES ─────────────────────────── */
+.sales-card{background:var(--ink2);border:1px solid rgba(201,168,76,.15);padding:1.5rem;margin-bottom:1rem}
+.sales-total{font-family:var(--serif);font-size:3rem;color:var(--gold);font-weight:300;line-height:1;margin-bottom:.3rem}
+.sales-label{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(245,240,232,.3)}
+.sales-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin-top:1.2rem}
+.sb-item{background:rgba(245,240,232,.03);padding:.9rem;text-align:center}
+.sb-num{font-family:var(--serif);font-size:1.5rem;color:var(--cream);font-weight:300}
+.sb-label{font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(245,240,232,.28);margin-top:.25rem}
+.orders-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.orders-table th{text-align:left;font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(245,240,232,.3);padding:.6rem .8rem;border-bottom:1px solid rgba(245,240,232,.07);font-weight:400}
+.orders-table td{padding:.7rem .8rem;border-bottom:1px solid rgba(245,240,232,.04);color:rgba(245,240,232,.7);vertical-align:top}
+.orders-table tr:hover td{background:rgba(245,240,232,.02)}
+
+/* ── TOAST ───────────────────────────────── */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--ink3);border:1px solid rgba(201,168,76,.28);padding:.85rem 1.2rem;z-index:9999;font-size:.78rem;color:var(--cream);max-width:270px;transform:translateY(60px);opacity:0;transition:all .3s;font-weight:300}
+.toast.show{transform:translateY(0);opacity:1}
+.toast-title{font-family:var(--serif);color:var(--gold);font-size:.88rem;margin-bottom:.18rem}
+
+/* ── MOBILE ──────────────────────────────── */
+.hamburger-btn{display:none;background:none;border:none;color:var(--cream);font-size:1.3rem;cursor:pointer}
+@media(max-width:860px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main-area{margin-left:0}
+  .hamburger-btn{display:block}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .sales-breakdown{grid-template-columns:1fr 1fr}
+}
+@media(max-width:500px){
+  .stats-row{grid-template-columns:1fr 1fr}
+  .page-body{padding:1rem}
+  .auth-card{padding:1.5rem}
+  .form-grid-2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"><div class="toast-title" id="toastTitle"></div><div id="toastMsg"></div></div>
+
+<!-- ══════════════════════════════════════════
+     AUTH SCREENS
+══════════════════════════════════════════ -->
+<div id="authWrap" class="auth-wrap">
+  <div class="auth-box">
+    <div class="auth-brand">
+      <div class="auth-brand-logo">川の屋 Kawanoya</div>
+      <div class="auth-brand-sub">Manager Dashboard</div>
+    </div>
+
+    <!-- LOGIN / REGISTER TABS -->
+    <div id="mainAuthCard" class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchAuthTab('login',this)">Login</button>
+        <button class="auth-tab" onclick="switchAuthTab('register',this)">Create Account</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div id="loginForm">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="auth-input" id="loginEmail" placeholder="you@example.com" onkeydown="if(event.key==='Enter')doLogin()"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="pw-wrap">
+            <input type="password" class="auth-input" id="loginPw" placeholder="Your password" onkeydown="if(event.key==='Enter')doLogin()"/>
+            <button class="pw-eye" onclick="togglePw('loginPw','eyeLogin')" type="button">
+              <svg id="eyeLogin" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <button class="auth-btn" id="loginBtn" onclick="doLogin()">Login to Dashboard →</button>
+        <div class="auth-err" id="loginErr"></div>
+        <a class="forgot-link" onclick="showForgot()">Forgot password? Click here to recover your account</a>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <div id="registerForm" style="display:none">
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label class="form-label">First Name</label>
+            <input type="text" class="auth-input" id="regFirst" placeholder="John"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Last Name</label>
+            <input type="text" class="auth-input" id="regLast" placeholder="Smith"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="auth-input" id="regEmail" placeholder="you@example.com"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="pw-wrap">
+            <input type="password" class="auth-input" id="regPw" placeholder="Minimum 6 characters"/>
+            <button class="pw-eye" onclick="togglePw('regPw','eyeReg')" type="button">
+              <svg id="eyeReg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm Password</label>
+          <div class="pw-wrap">
+            <input type="password" class="auth-input" id="regPw2" placeholder="Repeat password"/>
+            <button class="pw-eye" onclick="togglePw('regPw2','eyeReg2')" type="button">
+              <svg id="eyeReg2" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <button class="auth-btn" id="regBtn" onclick="doRegister()">Create Manager Account →</button>
+        <div class="auth-err" id="regErr"></div>
+      </div>
+
+      <!-- PENDING APPROVAL STATE -->
+      <div id="pendingState" style="display:none">
+        <div class="auth-pending">
+          <div class="auth-pending-icon">⏳</div>
+          <div class="auth-pending-title">Account Pending Approval</div>
+          <div class="auth-pending-msg">Your account has been created and is waiting for admin approval. You will receive an email once your account is approved.<br/><br/>Please check back later or contact the restaurant manager.</div>
+        </div>
+        <button class="auth-btn" style="margin-top:1rem;background:transparent;border:1px solid rgba(245,240,232,.15);color:rgba(245,240,232,.4)" onclick="showPendingFalse()">← Back to Login</button>
+      </div>
+    </div>
+
+    <!-- FORGOT PASSWORD CARD -->
+    <div id="forgotCard" class="auth-card" style="display:none">
+      <a class="back-link" onclick="showForgotFalse()">← Back to Login</a>
+      <div class="auth-title">Reset Password</div>
+      <div class="auth-sub">Enter your email address and we will send you a link to reset your password.</div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="auth-input" id="resetEmail" placeholder="you@example.com" onkeydown="if(event.key==='Enter')doForgot()"/>
+      </div>
+      <button class="auth-btn" id="forgotBtn" onclick="doForgot()">Send Reset Link →</button>
+      <div class="auth-err" id="forgotErr"></div>
+      <div id="forgotSuccess" class="auth-success" style="display:none">✅ Reset link sent! Check your email inbox and follow the link to set a new password.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MANAGER DASHBOARD
+══════════════════════════════════════════ -->
+<div id="dashboard">
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-main">川の屋 Kawanoya</div>
+      <div class="sidebar-logo-sub">Manager Portal</div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="userAvatar">M</div>
+      <div>
+        <div class="user-name" id="userName">Manager</div>
+        <div class="user-role">Restaurant Manager</div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" onclick="showPage('overview',this)">
+        <span class="nav-icon">📊</span>Overview
+      </button>
+      <button class="nav-item" onclick="showPage('notifications',this)">
+        <span class="nav-icon">🔔</span>Notifications
+        <span class="nav-badge" id="navBadge">0</span>
+      </button>
+      <button class="nav-item" onclick="showPage('orders',this)">
+        <span class="nav-icon">🍜</span>Orders
+      </button>
+      <button class="nav-item" onclick="showPage('reservations',this)">
+        <span class="nav-icon">📅</span>Reservations
+      </button>
+      <button class="nav-item" onclick="showPage('dishes',this)">
+        <span class="nav-icon">🍽️</span>Edit Dishes
+      </button>
+      <button class="nav-item" onclick="showPage('sales',this)">
+        <span class="nav-icon">💰</span>Daily Sales
+      </button>
+    </nav>
+    <div class="sidebar-foot">
+      <button class="logout-btn" onclick="doLogout()">Log Out</button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main-area">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title" id="pageTitle">Overview</div>
+        <div class="topbar-sub" id="pageSub">Welcome back</div>
+      </div>
+      <div class="topbar-right">
+        <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+        <button class="refresh-btn" onclick="refreshAll()">🔄 Refresh</button>
+      </div>
+    </div>
+    <div class="page-body">
+
+      <!-- ── OVERVIEW ──────────────────────── -->
+      <div class="page active" id="page-overview">
+        <div class="stats-row">
+          <div class="stat-card s1">
+            <div class="stat-num" id="ovTotalOrders">0</div>
+            <div class="stat-label">Today's Orders</div>
+            <div class="stat-sub" id="ovTotalSales">$0.00 total</div>
+            <div class="stat-icon">🍜</div>
+          </div>
+          <div class="stat-card s2">
+            <div class="stat-num" id="ovReservations">0</div>
+            <div class="stat-label">Reservations</div>
+            <div class="stat-sub">Today</div>
+            <div class="stat-icon">📅</div>
+          </div>
+          <div class="stat-card s3">
+            <div class="stat-num" id="ovCompleted">0</div>
+            <div class="stat-label">Completed</div>
+            <div class="stat-sub">Orders delivered</div>
+            <div class="stat-icon">✅</div>
+          </div>
+          <div class="stat-card s4">
+            <div class="stat-num" id="ovPending">0</div>
+            <div class="stat-label">Pending</div>
+            <div class="stat-sub">Awaiting action</div>
+            <div class="stat-icon">⏳</div>
+          </div>
+        </div>
+        <div class="section-hdr">
+          <div class="section-title">Recent Activity</div>
+          <button class="btn btn-outline btn-sm" onclick="showPage('notifications',document.querySelectorAll('.nav-item')[1])">View All →</button>
+        </div>
+        <div id="recentList"></div>
+      </div>
+
+      <!-- ── NOTIFICATIONS ─────────────────── -->
+      <div class="page" id="page-notifications">
+        <div class="filter-row">
+          <button class="flt-btn active" onclick="setFilter('all',this)">All</button>
+          <button class="flt-btn" onclick="setFilter('order',this)">🍜 Orders</button>
+          <button class="flt-btn" onclick="setFilter('reservation',this)">📅 Reservations</button>
+          <button class="flt-btn" onclick="setFilter('new',this)">⏳ Pending</button>
+          <button class="flt-btn" onclick="setFilter('completed',this)">✅ Done</button>
+        </div>
+        <div id="notifList"></div>
+      </div>
+
+      <!-- ── ORDERS ────────────────────────── -->
+      <div class="page" id="page-orders">
+        <div class="filter-row">
+          <button class="flt-btn active" onclick="setOrderFilter('all',this)">All</button>
+          <button class="flt-btn" onclick="setOrderFilter('Delivery',this)">🛵 Delivery</button>
+          <button class="flt-btn" onclick="setOrderFilter('Pickup',this)">🏃 Pickup</button>
+          <button class="flt-btn" onclick="setOrderFilter('new',this)">⏳ Pending</button>
+          <button class="flt-btn" onclick="setOrderFilter('completed',this)">✅ Completed</button>
+        </div>
+        <div id="ordersList"></div>
+      </div>
+
+      <!-- ── RESERVATIONS ───────────────────── -->
+      <div class="page" id="page-reservations">
+        <div id="reservationsList"></div>
+      </div>
+
+      <!-- ── EDIT DISHES ────────────────────── -->
+      <div class="page" id="page-dishes">
+        <p style="font-size:.78rem;color:rgba(245,240,232,.35);margin-bottom:1.2rem;line-height:1.7">Edit your featured signature dishes. Changes go live on the website immediately.</p>
+        <div id="dishEditors"></div>
+        <button class="btn btn-outline btn-full" onclick="addDish()">+ Add New Featured Dish</button>
+        <div class="sep"></div>
+        <div class="add-panel">
+          <div class="add-panel-title">+ Add New Menu Item</div>
+          <div class="upload-zone" style="padding:.8rem" onclick="document.getElementById('newMiFile').click()">
+            <input type="file" id="newMiFile" accept="image/*" style="display:none" onchange="previewNewMi(this)"/>
+            <div style="display:flex;align-items:center;gap:.7rem">
+              <div id="newMiPrev" style="width:44px;height:44px;background:#1a1008;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">🍽️</div>
+              <span style="font-size:.7rem;color:rgba(245,240,232,.25)">Tap to add dish photo</span>
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div><label class="form-label" style="font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(245,240,232,.35);display:block;margin-bottom:.3rem">Name *</label><input class="mgr-input" id="newMiName" placeholder="Dish name"/></div>
+            <div><label class="form-label" style="font-size:.58rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(245,240,232,.35);display:block;margin-bottom:.3rem">Price</label><input class="mgr-input" id="newMiPrice" placeholder="$24"/></div>
+          </div>
+          <input class="mgr-input" id="newMiDesc" placeholder="Description..." style="width:100%;margin:.5rem 0"/>
+          <div class="form-grid-2" style="margin-bottom:.5rem">
+            <select class="mgr-input" id="newMiCat" style="background:#1a1a1a;cursor:pointer">
+              <option value="appetizers">Appetizers</option>
+              <option value="mains">Main Courses</option>
+              <option value="ochazuke">Ochazuke</option>
+              <option value="stonepot">Stone Pot Rice</option>
+              <option value="beverages">Beverages</option>
+            </select>
+            <input class="mgr-input" id="newMiTag" placeholder="Tag e.g. Vegan"/>
+          </div>
+          <button class="btn btn-gold btn-full" onclick="addMenuItem()">Add to Menu</button>
+        </div>
+      </div>
+
+      <!-- ── DAILY SALES ────────────────────── -->
+      <div class="page" id="page-sales">
+        <div class="sales-card">
+          <div class="sales-label">Today's Total Revenue</div>
+          <div class="sales-total" id="salesToday">$0.00</div>
+          <div class="sales-breakdown">
+            <div class="sb-item">
+              <div class="sb-num" id="salesDelivery">$0</div>
+              <div class="sb-label">Delivery</div>
+            </div>
+            <div class="sb-item">
+              <div class="sb-num" id="salesPickup">$0</div>
+              <div class="sb-label">Pickup</div>
+            </div>
+            <div class="sb-item">
+              <div class="sb-num" id="salesCount">0</div>
+              <div class="sb-label">Orders</div>
+            </div>
+          </div>
+        </div>
+        <div class="section-hdr" style="margin-top:1.5rem">
+          <div class="section-title">Today's Order Breakdown</div>
+          <div id="salesDate" style="font-size:.65rem;color:rgba(245,240,232,.3)"></div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="orders-table" id="salesTable">
+            <thead><tr><th>Order ID</th><th>Type</th><th>Items</th><th>Total</th><th>Status</th><th>Time</th></tr></thead>
+            <tbody id="salesBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// SUPABASE CONFIG
+// ═══════════════════════════════════════════
+const SB_URL = 'https://bolzoxakatotgecllbhc.supabase.co';
+const SB_KEY = 'sb_publishable_YyQdYBM4BSrK0QgQZp8eog_thA9SMrr';
+const SITE_KEY = 'kawanoya_data';
+const AUTH_URL = SB_URL + '/auth/v1';
+
+// ── Supabase Auth helpers ────────────────
+const sbAuth = {
+  async signUp(email, pw, meta) {
+    const r = await fetch(AUTH_URL + '/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SB_KEY },
+      body: JSON.stringify({ email, password: pw, data: meta })
+    });
+    return await r.json();
+  },
+  async signIn(email, pw) {
+    const r = await fetch(AUTH_URL + '/token?grant_type=password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SB_KEY },
+      body: JSON.stringify({ email, password: pw })
+    });
+    return await r.json();
+  },
+  async resetPw(email) {
+    const r = await fetch(AUTH_URL + '/recover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SB_KEY },
+      body: JSON.stringify({ email })
+    });
+    return r.ok;
+  },
+  async signOut(token) {
+    await fetch(AUTH_URL + '/logout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SB_KEY, Authorization: 'Bearer ' + token }
+    });
+  }
+};
+
+// ── Supabase DB helpers ──────────────────
+const sbDB = {
+  async get(table, params = '') {
+    try {
+      const r = await fetch(SB_URL + '/rest/v1/' + table + '?' + params + '&order=created_at.desc', {
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + (session?.access_token || SB_KEY) }
+      });
+      return r.ok ? await r.json() : [];
+    } catch { return []; }
+  },
+  async patch(table, id, body) {
+    try {
+      await fetch(SB_URL + '/rest/v1/' + table + '?id=eq.' + id, {
+        method: 'PATCH',
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + (session?.access_token || SB_KEY), 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+    } catch {}
+  },
+  async post(table, body) {
+    try {
+      const r = await fetch(SB_URL + '/rest/v1/' + table, {
+        method: 'POST',
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + (session?.access_token || SB_KEY), 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=representation' },
+        body: JSON.stringify(body)
+      });
+      return r.ok ? await r.json() : null;
+    } catch { return null; }
+  },
+  async kvGet(key) {
+    try {
+      const r = await fetch(SB_URL + '/rest/v1/kawanoya_settings?key=eq.' + encodeURIComponent(key) + '&select=*', {
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + (session?.access_token || SB_KEY) }
+      });
+      const rows = r.ok ? await r.json() : [];
+      return rows[0] || null;
+    } catch { return null; }
+  },
+  async kvSet(key, value) {
+    await sbDB.post('kawanoya_settings', { key, value: JSON.stringify(value) });
+  }
+};
+
+// ── Register manager in managers table ──
+async function saveManagerProfile(userId, first, last, email) {
+  await sbDB.post('kawanoya_managers', {
+    user_id: userId, first_name: first, last_name: last,
+    email, status: 'pending', created_at: new Date().toISOString()
+  });
+  // Also notify admin via kawanoya_orders table
+  await fetch(SB_URL + '/rest/v1/kawanoya_orders', {
+    method: 'POST',
+    headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify({
+      order_id: 'MGR-' + Date.now().toString().slice(-4),
+      order_type: 'Manager Request', kind: 'manager_request',
+      items: first + ' ' + last + ' has requested a manager account. Email: ' + email,
+      total: '', customer_name: first + ' ' + last,
+      customer_phone: email, status: 'new',
+      created_at: new Date().toISOString()
+    })
+  });
+}
+
+// ═══════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════
+let session = null;
+let currentUser = null;
+let allOrders = [];
+let siteData = null;
+let currentFilter = 'all';
+let currentOrderFilter = 'all';
+let newMiImgData = '';
+
+// ═══════════════════════════════════════════
+// AUTH UI
+// ═══════════════════════════════════════════
+function switchAuthTab(tab, btn) {
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
+  document.getElementById('pendingState').style.display = 'none';
+  clearErrs();
+}
+
+function togglePw(inputId, iconId) {
+  const inp = document.getElementById(inputId);
+  const isHidden = inp.type === 'password';
+  inp.type = isHidden ? 'text' : 'password';
+  document.getElementById(iconId).innerHTML = isHidden
+    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+}
+
+function showForgot() {
+  document.getElementById('mainAuthCard').style.display = 'none';
+  document.getElementById('forgotCard').style.display = 'block';
+}
+function showForgotFalse() {
+  document.getElementById('mainAuthCard').style.display = 'block';
+  document.getElementById('forgotCard').style.display = 'none';
+}
+function showPendingFalse() {
+  document.getElementById('pendingState').style.display = 'none';
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('registerForm').style.display = 'none';
+}
+function clearErrs() {
+  ['loginErr','regErr','forgotErr'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = ''; });
+}
+function setErr(id, msg) { const el = document.getElementById(id); if(el) { el.textContent = msg; } }
+function setLoading(btnId, loading, text) { const btn = document.getElementById(btnId); if(btn){ btn.disabled = loading; btn.textContent = loading ? 'Please wait...' : text; } }
+
+// ═══════════════════════════════════════════
+// AUTH ACTIONS
+// ═══════════════════════════════════════════
+async function doRegister() {
+  const first = document.getElementById('regFirst').value.trim();
+  const last  = document.getElementById('regLast').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const pw    = document.getElementById('regPw').value;
+  const pw2   = document.getElementById('regPw2').value;
+
+  if (!first || !last) { setErr('regErr', 'Please enter your first and last name.'); return; }
+  if (!email || !email.includes('@')) { setErr('regErr', 'Please enter a valid email address.'); return; }
+  if (pw.length < 6) { setErr('regErr', 'Password must be at least 6 characters.'); return; }
+  if (pw !== pw2) { setErr('regErr', 'Passwords do not match.'); return; }
+
+  setLoading('regBtn', true, '');
+  const result = await sbAuth.signUp(email, pw, { first_name: first, last_name: last, role: 'manager' });
+
+  if (result.error) {
+    setErr('regErr', result.error.message || 'Registration failed. Try again.');
+    setLoading('regBtn', false, 'Create Manager Account →');
+    return;
+  }
+
+  // Save to managers table for admin approval
+  if (result.user?.id) {
+    await saveManagerProfile(result.user.id, first, last, email);
+  }
+
+  setLoading('regBtn', false, 'Create Manager Account →');
+  // Show pending state
+  document.getElementById('registerForm').style.display = 'none';
+  document.getElementById('pendingState').style.display = 'block';
+  showToast('Account Created ✓', 'Awaiting admin approval. Check your email to verify.');
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pw    = document.getElementById('loginPw').value;
+  if (!email || !pw) { setErr('loginErr', 'Please enter your email and password.'); return; }
+
+  setLoading('loginBtn', true, '');
+  const result = await sbAuth.signIn(email, pw);
+
+  if (result.error || !result.access_token) {
+    setErr('loginErr', result.error?.message || 'Incorrect email or password.');
+    setLoading('loginBtn', false, 'Login to Dashboard →');
+    return;
+  }
+
+  session = result;
+
+  // Check if manager account is approved
+  const managers = await sbDB.get('kawanoya_managers', 'user_id=eq.' + result.user.id + '&select=*');
+  const manager = managers[0];
+
+  if (!manager) {
+    // First login — auto-create profile if missing
+    const meta = result.user.user_metadata || {};
+    await saveManagerProfile(result.user.id, meta.first_name || 'Manager', meta.last_name || '', email);
+    session = null;
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('pendingState').style.display = 'block';
+    setLoading('loginBtn', false, 'Login to Dashboard →');
+    return;
+  }
+
+  if (manager.status === 'pending') {
+    session = null;
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('pendingState').style.display = 'block';
+    setLoading('loginBtn', false, 'Login to Dashboard →');
+    return;
+  }
+
+  if (manager.status === 'rejected') {
+    session = null;
+    setErr('loginErr', 'Your account request was declined. Contact the admin.');
+    setLoading('loginBtn', false, 'Login to Dashboard →');
+    return;
+  }
+
+  // Approved — enter dashboard
+  currentUser = { ...result.user, ...manager };
+  localStorage.setItem('kawanoya_mgr_session', JSON.stringify({ token: result.access_token, user: currentUser }));
+  setLoading('loginBtn', false, 'Login to Dashboard →');
+  enterDashboard();
+}
+
+async function doForgot() {
+  const email = document.getElementById('resetEmail').value.trim();
+  if (!email || !email.includes('@')) { setErr('forgotErr', 'Please enter a valid email address.'); return; }
+
+  setLoading('forgotBtn', true, '');
+  const ok = await sbAuth.resetPw(email);
+  setLoading('forgotBtn', false, 'Send Reset Link →');
+
+  if (ok) {
+    document.getElementById('forgotSuccess').style.display = 'block';
+    document.getElementById('resetEmail').value = '';
+  } else {
+    setErr('forgotErr', 'Could not send reset email. Please try again.');
+  }
+}
+
+async function doLogout() {
+  if (session?.access_token) await sbAuth.signOut(session.access_token);
+  session = null; currentUser = null;
+  localStorage.removeItem('kawanoya_mgr_session');
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('authWrap').style.display = 'flex';
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPw').value = '';
+  showPendingFalse();
+}
+
+// ── Auto-login from saved session ────────
+async function tryAutoLogin() {
+  const saved = localStorage.getItem('kawanoya_mgr_session');
+  if (!saved) return;
+  try {
+    const { token, user } = JSON.parse(saved);
+    // Verify token is still valid
+    const r = await fetch(AUTH_URL + '/user', {
+      headers: { apikey: SB_KEY, Authorization: 'Bearer ' + token }
+    });
+    if (!r.ok) { localStorage.removeItem('kawanoya_mgr_session'); return; }
+    // Re-check approval
+    const managers = await sbDB.get('kawanoya_managers', 'user_id=eq.' + user.id + '&select=*');
+    const manager = managers[0];
+    if (!manager || manager.status !== 'approved') { localStorage.removeItem('kawanoya_mgr_session'); return; }
+    session = { access_token: token };
+    currentUser = { ...user, ...manager };
+    enterDashboard();
+  } catch { localStorage.removeItem('kawanoya_mgr_session'); }
+}
+
+// ═══════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════
+function enterDashboard() {
+  document.getElementById('authWrap').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'flex';
+
+  // Set user info
+  const name = (currentUser.first_name || '') + ' ' + (currentUser.last_name || '');
+  document.getElementById('userName').textContent = name.trim() || currentUser.email || 'Manager';
+  document.getElementById('userAvatar').textContent = (currentUser.first_name?.[0] || 'M').toUpperCase();
+  document.getElementById('pageSub').textContent = 'Welcome back, ' + (currentUser.first_name || 'Manager');
+  document.getElementById('salesDate').textContent = new Date().toLocaleDateString([], { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+
+  refreshAll();
+  // Auto-refresh every 60 seconds
+  setInterval(refreshAll, 60000);
+}
+
+async function refreshAll() {
+  await loadSiteData();
+  await loadOrders();
+  renderAll();
+}
+
+async function loadSiteData() {
+  const row = await sbDB.kvGet(SITE_KEY);
+  if (row?.value) {
+    try { siteData = JSON.parse(row.value); }
+    catch { siteData = null; }
+  }
+}
+
+async function loadOrders() {
+  allOrders = await sbDB.get('kawanoya_orders', 'select=*');
+}
+
+function renderAll() {
+  updateStats();
+  renderRecent();
+  renderNotifList();
+  renderOrdersList();
+  renderReservationsList();
+  renderSales();
+  if (document.getElementById('page-dishes').classList.contains('active')) renderDishEditors();
+}
+
+// ═══════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════
+function isToday(dateStr) {
+  if (!dateStr) return false;
+  const d = new Date(dateStr);
+  const now = new Date();
+  return d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+}
+
+function updateStats() {
+  const todayOrders = allOrders.filter(o => isToday(o.created_at) && o.kind === 'order');
+  const todayRes    = allOrders.filter(o => isToday(o.created_at) && o.kind === 'reservation');
+  const completed   = allOrders.filter(o => o.status === 'completed' && isToday(o.created_at));
+  const pending     = allOrders.filter(o => o.status === 'new');
+  const todaySales  = todayOrders.filter(o=>o.status==='completed').reduce((s,o) => s + parseMoney(o.total), 0);
+
+  document.getElementById('ovTotalOrders').textContent  = todayOrders.length;
+  document.getElementById('ovTotalSales').textContent   = '$' + todaySales.toFixed(2) + ' total';
+  document.getElementById('ovReservations').textContent = todayRes.length;
+  document.getElementById('ovCompleted').textContent    = completed.length;
+  document.getElementById('ovPending').textContent      = pending.length;
+
+  const badge = document.getElementById('navBadge');
+  badge.textContent = pending.length;
+  badge.className   = 'nav-badge' + (pending.length > 0 ? ' show' : '');
+}
+
+function parseMoney(str) {
+  if (!str) return 0;
+  const n = parseFloat(str.replace(/[^0-9.]/g, ''));
+  return isNaN(n) ? 0 : n;
+}
+
+// ═══════════════════════════════════════════
+// ORDER CARD
+// ═══════════════════════════════════════════
+function orderCard(o) {
+  const isRes = o.kind === 'reservation';
+  const isMgr = o.kind === 'manager_request';
+  const icon  = isRes ? '📅' : isMgr ? '👤' : '🍜';
+  const typeLbl = isRes ? 'Reservation' : isMgr ? 'Manager Request' : (o.order_type || 'Order');
+  const typeCls = isRes ? 'bdg-res' : (o.order_type === 'Delivery' ? 'bdg-delivery' : 'bdg-pickup');
+  const statCls = o.status === 'completed' ? 'bdg-done' : 'bdg-new';
+  const statLbl = o.status === 'completed' ? '✅ Completed' : '⏳ Pending';
+  const cardCls = o.status === 'completed' ? 'is-done' : isRes ? 'is-reservation' : 'is-order';
+  const t = o.created_at ? new Date(o.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + ' · ' + new Date(o.created_at).toLocaleDateString([],{month:'short',day:'numeric'}) : '';
+
+  return `<div class="order-card ${cardCls}" id="oc-${o.id}">
+    <div class="oc-top">
+      <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap">
+        <span class="badge ${typeCls}">${icon} ${typeLbl}</span>
+        <span class="badge ${statCls}">${statLbl}</span>
+      </div>
+      <div class="oc-time">${t}</div>
+    </div>
+    ${o.customer_name || o.customer_phone ? `<div class="oc-customer">👤 ${o.customer_name || ''} ${o.customer_phone ? '· 📞 ' + o.customer_phone : ''}</div>` : ''}
+    <div class="oc-items">${o.items || ''}</div>
+    <div class="oc-foot">
+      <div class="oc-total">${o.total || ''}</div>
+      <div class="oc-actions">
+        ${o.status !== 'completed' && !isMgr ? `<button class="oc-btn confirm" onclick="confirmOrder(${o.id})">${isRes ? '✅ Confirm Table' : '✅ Confirm Delivered'}</button>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// RENDER PAGES
+// ═══════════════════════════════════════════
+function renderRecent() {
+  const el = document.getElementById('recentList');
+  const recent = allOrders.filter(o => o.kind !== 'manager_request').slice(0, 6);
+  el.innerHTML = recent.length ? recent.map(orderCard).join('') : '<div class="empty-state"><span class="empty-icon">🍜</span>No activity yet.</div>';
+}
+
+function renderNotifList() {
+  const el = document.getElementById('notifList');
+  let list = allOrders.filter(o => o.kind !== 'manager_request');
+  if (currentFilter === 'order')       list = list.filter(o => o.kind === 'order');
+  else if (currentFilter === 'reservation') list = list.filter(o => o.kind === 'reservation');
+  else if (currentFilter === 'new')    list = list.filter(o => o.status === 'new');
+  else if (currentFilter === 'completed') list = list.filter(o => o.status === 'completed');
+  el.innerHTML = list.length ? list.map(orderCard).join('') : '<div class="empty-state"><span class="empty-icon">🔔</span>No notifications yet.</div>';
+}
+
+function renderOrdersList() {
+  const el = document.getElementById('ordersList');
+  let list = allOrders.filter(o => o.kind === 'order');
+  if (currentOrderFilter === 'Delivery') list = list.filter(o => o.order_type === 'Delivery');
+  else if (currentOrderFilter === 'Pickup') list = list.filter(o => o.order_type === 'Pickup');
+  else if (currentOrderFilter === 'new') list = list.filter(o => o.status === 'new');
+  else if (currentOrderFilter === 'completed') list = list.filter(o => o.status === 'completed');
+  el.innerHTML = list.length ? list.map(orderCard).join('') : '<div class="empty-state"><span class="empty-icon">🍜</span>No orders yet.</div>';
+}
+
+function renderReservationsList() {
+  const el = document.getElementById('reservationsList');
+  const list = allOrders.filter(o => o.kind === 'reservation');
+  el.innerHTML = list.length ? list.map(orderCard).join('') : '<div class="empty-state"><span class="empty-icon">📅</span>No reservations yet.</div>';
+}
+
+function renderSales() {
+  const todayOrders = allOrders.filter(o => isToday(o.created_at) && o.kind === 'order');
+  const completed   = todayOrders.filter(o => o.status === 'completed');
+  const delivery    = completed.filter(o => o.order_type === 'Delivery');
+  const pickup      = completed.filter(o => o.order_type === 'Pickup');
+  const totalAmt    = completed.reduce((s, o) => s + parseMoney(o.total), 0);
+  const delivAmt    = delivery.reduce((s, o) => s + parseMoney(o.total), 0);
+  const pickupAmt   = pickup.reduce((s, o) => s + parseMoney(o.total), 0);
+
+  document.getElementById('salesToday').textContent   = '$' + totalAmt.toFixed(2);
+  document.getElementById('salesDelivery').textContent = '$' + delivAmt.toFixed(2);
+  document.getElementById('salesPickup').textContent   = '$' + pickupAmt.toFixed(2);
+  document.getElementById('salesCount').textContent    = todayOrders.length;
+
+  const body = document.getElementById('salesBody');
+  body.innerHTML = todayOrders.length
+    ? todayOrders.map(o => `<tr>
+        <td style="color:var(--gold)">${o.order_id || o.id}</td>
+        <td><span class="badge ${o.order_type==='Delivery'?'bdg-delivery':'bdg-pickup'}">${o.order_type||'—'}</span></td>
+        <td style="max-width:200px;word-break:break-word">${o.items||'—'}</td>
+        <td style="color:var(--gold)">${o.total||'—'}</td>
+        <td><span class="badge ${o.status==='completed'?'bdg-done':'bdg-new'}">${o.status==='completed'?'✅':'⏳'}</span></td>
+        <td>${o.created_at ? new Date(o.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '—'}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="6" style="text-align:center;padding:2rem;color:rgba(245,240,232,.25)">No orders today</td></tr>';
+}
+
+// ═══════════════════════════════════════════
+// ORDER ACTIONS
+// ═══════════════════════════════════════════
+async function confirmOrder(id) {
+  await sbDB.patch('kawanoya_orders', id, { status: 'completed' });
+  showToast('Confirmed ✓', 'Order marked as delivered/completed.');
+  await loadOrders();
+  renderAll();
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('#page-notifications .flt-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderNotifList();
+}
+
+function setOrderFilter(f, btn) {
+  currentOrderFilter = f;
+  document.querySelectorAll('#page-orders .flt-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderOrdersList();
+}
+
+// ═══════════════════════════════════════════
+// DISH EDITOR
+// ═══════════════════════════════════════════
+function renderDishEditors() {
+  const el = document.getElementById('dishEditors');
+  if (!siteData?.dishes) { el.innerHTML = '<div class="empty-state"><span class="empty-icon">⚠️</span>No site data loaded. Click Refresh.</div>'; return; }
+  el.innerHTML = siteData.dishes.map((d, i) => `
+    <div class="editor-card" id="de-${d.id}">
+      <div class="ec-top">
+        <div class="ec-img-wrap" onclick="document.getElementById('df${d.id}').click()">
+          ${d.img ? `<img class="ec-img" src="${d.img}" alt=""/>` : `<div class="ec-ph">${d.emoji}</div>`}
+          <div class="ec-overlay">📷 Change</div>
+          <input type="file" id="df${d.id}" accept="image/*" style="display:none" onchange="uploadDishImg(this,${d.id})"/>
+        </div>
+        <div class="ec-fields">
+          <input class="mgr-input" value="${d.name}" onchange="editDish(${d.id},'name',this.value)" placeholder="Dish name"/>
+          <input class="mgr-input" value="${d.tag||''}" onchange="editDish(${d.id},'tag',this.value)" placeholder="Tag e.g. Specialty Ochazuke"/>
+          <div class="ec-row">
+            <input class="mgr-input" value="${d.price}" onchange="editDish(${d.id},'price',this.value)" placeholder="$00" style="max-width:80px"/>
+            <input class="mgr-input" value="${d.badge||''}" onchange="editDish(${d.id},'badge',this.value)" placeholder="Badge"/>
+          </div>
+        </div>
+      </div>
+      <textarea class="mgr-input" rows="2" onchange="editDish(${d.id},'desc',this.value)">${d.desc}</textarea>
+      <div class="ec-actions">
+        <button class="btn btn-outline btn-sm" style="border-color:rgba(139,26,26,.3);color:#e06060" onclick="deleteDish(${d.id})">Delete</button>
+        <button class="btn btn-gold btn-sm" onclick="saveDishes()">Save</button>
+      </div>
+    </div>`).join('');
+}
+
+function uploadDishImg(input, id) {
+  const file = input.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = async e => {
+    const d = siteData.dishes.find(x => x.id === id);
+    if (d) { d.img = e.target.result; await pushSiteData(); renderDishEditors(); showToast('Photo Updated ✓', d.name + ' photo changed.'); }
+  };
+  r.readAsDataURL(file); input.value = '';
+}
+
+function editDish(id, field, val) {
+  const d = siteData?.dishes?.find(x => x.id === id);
+  if (d) d[field] = val;
+}
+
+async function saveDishes() {
+  await pushSiteData();
+  showToast('Saved ✓', 'Featured dishes updated for all visitors.');
+}
+
+async function deleteDish(id) {
+  if (!confirm('Delete this dish?')) return;
+  siteData.dishes = siteData.dishes.filter(d => d.id !== id);
+  await pushSiteData();
+  renderDishEditors();
+  showToast('Deleted', 'Dish removed.');
+}
+
+async function addDish() {
+  if (!siteData) return;
+  const id = Date.now();
+  siteData.dishes.push({ id, name: 'New Dish', tag: 'Specialty', badge: '', desc: 'Enter description here.', price: '$0', emoji: '🍜', img: '' });
+  await pushSiteData();
+  renderDishEditors();
+  document.getElementById('de-' + id)?.scrollIntoView({ behavior: 'smooth' });
+}
+
+async function addMenuItem() {
+  const name  = document.getElementById('newMiName').value.trim();
+  const price = document.getElementById('newMiPrice').value.trim();
+  const desc  = document.getElementById('newMiDesc').value.trim();
+  const cat   = document.getElementById('newMiCat').value;
+  const tag   = document.getElementById('newMiTag').value.trim();
+  if (!name) { showToast('Missing Name', 'Please enter a dish name.'); return; }
+  const catNames = { appetizers:'Appetizers', mains:'Main Courses', ochazuke:'Ochazuke', stonepot:'Stone Pot Rice', beverages:'Beverages' };
+  const id = Date.now();
+  siteData.menuItems[cat].push({ id, name, desc: desc || 'Fresh ingredients.', price: price || '$0', tag, emoji: '🍽️', img: newMiImgData });
+  await pushSiteData();
+  ['newMiName','newMiPrice','newMiDesc','newMiTag'].forEach(x => { document.getElementById(x).value = ''; });
+  newMiImgData = ''; document.getElementById('newMiPrev').innerHTML = '🍽️';
+  showToast('Added ✓', name + ' added to ' + catNames[cat] + '.');
+}
+
+function previewNewMi(input) {
+  const file = input.files[0]; if (!file) return;
+  const r = new FileReader();
+  r.onload = e => { newMiImgData = e.target.result; document.getElementById('newMiPrev').innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover"/>`; };
+  r.readAsDataURL(file); input.value = '';
+}
+
+async function pushSiteData() {
+  await sbDB.kvSet(SITE_KEY, siteData);
+}
+
+// ═══════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════
+const titles = { overview:'Overview', notifications:'Notifications', orders:'Orders', reservations:'Reservations', dishes:'Edit Dishes', sales:'Daily Sales' };
+const subs   = { overview:'Your restaurant at a glance', notifications:'All orders and reservations', orders:'Manage food orders', reservations:'Table reservations', dishes:'Add and edit menu items', sales:"Today's revenue and breakdown" };
+
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  document.getElementById('pageTitle').textContent = titles[id] || id;
+  document.getElementById('pageSub').textContent   = subs[id] || '';
+  if (id === 'dishes') renderDishEditors();
+  if (id === 'sales')  renderSales();
+  // Close sidebar on mobile
+  if (window.innerWidth <= 860) document.getElementById('sidebar').classList.remove('open');
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+let toastT;
+function showToast(title, msg) {
+  document.getElementById('toastTitle').textContent = title;
+  document.getElementById('toastMsg').textContent   = msg;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+tryAutoLogin();
+</script>
+</body>
+</html>
