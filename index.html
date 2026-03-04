@@ -551,7 +551,7 @@ footer{background:#060606;border-top:1px solid rgba(201,168,76,.1);padding:3.5re
   </div>
   <div class="footer-bottom">
     <div class="footer-copy">© 2025 Kawanoya Restaurant. All rights reserved.</div>
-    <div class="footer-demo">Website Concept Demo</div>
+
   </div>
 </footer>
 
@@ -670,11 +670,11 @@ function loadData() {
   catch { return JSON.parse(JSON.stringify(DEFAULT_DATA)); }
 }
 
-// Save to BOTH localStorage (instant) AND Supabase (shared cloud)
+// Save to localStorage only (customer site is read-only)
 function saveData() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(siteData));
-  syncToSupabase(); // async — saves to cloud in background
 }
+// Stub - customer site doesn't push to cloud
 
 let siteData = loadData();
 
@@ -851,7 +851,7 @@ function uploadGalleryImages(input) {
       siteData.galleryImages.push({ id: Date.now() + Math.random(), src: e.target.result, name: file.name.replace(/\.[^.]+$/, ''), category: '' });
       done++;
       if (done === files.length) {
-        saveData(); renderGallery(); renderAdminGallery();
+        saveData(); renderGallery();
         showToast(`${files.length} Photo${files.length > 1 ? 's' : ''} Added ✓`, 'Gallery updated!');
       }
     };
@@ -870,44 +870,6 @@ function uploadGalleryImages(input) {
 
 
 
-
-// ── Menu Items ──
-function renderAdminMenu() {
-  const list = document.getElementById('menuEditorList');
-  const catNames = {appetizers:'Appetizers', mains:'Mains', ochazuke:'Ochazuke', stonepot:'Stone Pot', beverages:'Beverages'};
-  list.innerHTML = Object.entries(siteData.menuItems).map(([cat, items]) => `
-    <div style="margin-bottom:1.2rem">
-      <div style="font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:.6rem;padding-bottom:.4rem;border-bottom:1px solid rgba(201,168,76,.15)">${catNames[cat]}</div>
-      ${items.map(item => `
-        <div class="dish-editor-card" style="padding:.9rem" id="mec-${item.id}">
-          <div class="dec-top">
-            <div class="dec-img-wrap">
-              ${item.img ? `<img class="dec-img" src="${item.img}" alt="${item.name}"/>` : `<div class="dec-img-placeholder" style="font-size:1.4rem">${item.emoji}</div>`}
-              <div class="dec-photo-btn" onclick="uploadMenuItemImg(${item.id},'${cat}')">📷<br/>Photo</div>
-              <input type="file" id="miFile-${item.id}" accept="image/*" style="display:none" onchange="handleMenuItemImg(this,${item.id},'${cat}')"/>
-            </div>
-            <div class="dec-fields">
-              <input class="admin-input" value="${item.name}" onchange="updateMenuItem(${item.id},'${cat}','name',this.value)"/>
-              <div class="dec-row">
-                <input class="admin-input admin-input-sm" value="${item.price}" onchange="updateMenuItem(${item.id},'${cat}','price',this.value)" placeholder="$00"/>
-                <input class="admin-input" value="${item.tag||''}" onchange="updateMenuItem(${item.id},'${cat}','tag',this.value)" placeholder="Tag e.g. Vegan"/>
-              </div>
-            </div>
-          </div>
-          <input class="admin-input" value="${item.desc}" onchange="updateMenuItem(${item.id},'${cat}','desc',this.value)" placeholder="Description" style="margin-top:.4rem"/>
-          <div class="dec-actions"><button class="dec-btn danger" onclick="deleteMenuItem(${item.id},'${cat}')">✕ Remove</button><button class="dec-btn save-btn" onclick="showToast('Saved ✓','Menu item updated.')">Save</button></div>
-        </div>`).join('')}
-    </div>`).join('');
-}
-
-
-
-
-
-
-let newMenuImgData = '';
-
-// ── Info ──
 
 
 // ═══════════════════════════════════════════
@@ -958,92 +920,29 @@ function renderCart() {
 
 
 
-function renderNotifDropdown() {
-  const list = document.getElementById('notifList');
-  const orders = getOrders();
-  if(!list) return;
-  if(!orders.length){ list.innerHTML = '<div class="notif-empty">No orders yet.<br/>Orders will appear here when customers order.</div>'; return; }
-  list.innerHTML = orders.slice(0,10).map(o => {
-    const isRes = o.kind === 'reservation';
-    const isOT  = o.kind === 'ordertype';
-    const icon  = isRes ? '📅' : isOT ? (o.type === 'Delivery' ? '🛵' : '🏃') : '🍜';
-    const typeClass = isRes ? 'reservation' : o.type.toLowerCase();
-    return `
-    <div class="notif-item ${o.read ? '' : 'unread'}">
-      <div class="notif-item-top">
-        <div class="notif-item-title">${icon} ${isOT ? o.type + ' Selected' : o.id}</div>
-        <div class="notif-item-time">${o.time}</div>
-      </div>
-      ${isRes ? `<div class="notif-item-body" style="color:var(--gold);font-size:.72rem;margin-bottom:.2rem">👤 ${o.name} · 📞 ${o.phone}</div>` : ''}
-      <div class="notif-item-body">${o.items}</div>
-      ${o.total ? `<div class="notif-item-total">${o.total}</div>` : ''}
-      <span class="notif-item-type ${typeClass}">${o.type}</span>
-    </div>`;
-  }).join('');
-}
-
-
-function renderAdminOrders() {
-  const list = document.getElementById('adminOrdersList');
-  if(!list) return;
-  const orders = getOrders();
-  if(!orders.length){ list.innerHTML = '<div class="notif-empty" style="padding:2rem;text-align:center;font-size:.82rem;color:rgba(245,240,232,.25)">No orders yet.<br/>When customers place orders they appear here.</div>'; return; }
-  list.innerHTML = orders.map((o,i) => {
-    const isRes = o.kind === 'reservation';
-    const isOT  = o.kind === 'ordertype';
-    const icon  = isRes ? '📅' : isOT ? (o.type === 'Delivery' ? '🛵' : '🏃') : '🍜';
-    const typeClass = isRes ? 'reservation' : o.type.toLowerCase();
-    const statusLabel = o.status === 'new'
-      ? (isRes ? '🔵 New Reservation' : isOT ? (o.type === 'Delivery' ? '🛵 Delivery Selected' : '🏃 Pickup Selected') : '🟡 New Order')
-      : '✅ Completed';
-    return `
-    <div class="order-notif-card ${o.status}" id="onc-${o.id}">
-      <span class="onc-status ${isRes && o.status==='new' ? 'reservation' : isOT ? 'reservation' : o.status}">${statusLabel}</span>
-      <div class="onc-top">
-        <div class="onc-num">${icon} ${isOT ? o.type : o.id}</div>
-        <div class="onc-time">${o.time}</div>
-      </div>
-      ${isRes ? `<div style="font-size:.78rem;color:var(--gold);margin-bottom:.4rem;font-weight:400">👤 ${o.name} &nbsp;·&nbsp; 📞 ${o.phone}</div>` : ''}
-      <div class="onc-items">${o.items}</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:.3rem">
-        ${o.total ? `<div class="onc-total">${o.total}</div>` : '<div></div>'}
-        <span class="notif-item-type ${typeClass}" style="font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;padding:.2rem .6rem">${o.type}</span>
-      </div>
-      <div class="onc-actions">
-        ${o.status === 'new' ? `<button class="onc-btn complete-btn" onclick="markOrderDone('${o.id}')">${isRes ? '✅ Confirm Reservation' : isOT ? '✅ Acknowledge' : '✅ Mark Complete'}</button>` : ''}
-        <button class="onc-btn delete-btn" onclick="deleteOrder('${o.id}')">✕ Remove</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-
-
-
-// ─── RESERVATION NOTIFICATION ──────────────
-
-
-// Close notif dropdown when clicking outside
-document.addEventListener('click', e => {
-  const dd = document.getElementById('notifDropdown');
-  const bell = document.getElementById('notifBellBtn');
-  if(dd && bell && !dd.contains(e.target) && !bell.contains(e.target)) dd.classList.remove('open');
-});
-
 
 // ─── SYNC FROM CLOUD (customer read-only) ──
 async function syncPublicData() {
+  // Page already rendered with default data — this updates from cloud silently
   try {
-    const row = await sb.getSingle('kawanoya_settings', 'siteData');
-    if (row && row.value) {
-      const cloud = JSON.parse(row.value);
-      ['heroImages','activeHeroIndex','galleryImages','dishes','menuItems','info'].forEach(k => {
-        if (cloud[k] !== undefined) siteData[k] = cloud[k];
-      });
-      localStorage.setItem('kawanoya_data', JSON.stringify(siteData));
+    const r = await fetch(SUPABASE_URL + '/rest/v1/kawanoya_settings?key=eq.kawanoya_data&select=value', {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+    });
+    if (!r.ok) return;
+    const rows = await r.json();
+    if (!rows || !rows.length || !rows[0].value) return;
+    const cloud = JSON.parse(rows[0].value);
+    let changed = false;
+    if (cloud.dishes && cloud.dishes.length)       { siteData.dishes = cloud.dishes; changed = true; }
+    if (cloud.menuItems)                            { siteData.menuItems = cloud.menuItems; changed = true; }
+    if (cloud.info && cloud.info.name)              { siteData.info = cloud.info; changed = true; }
+    if (cloud.galleryImages)                        { siteData.galleryImages = cloud.galleryImages; changed = true; }
+    if (cloud.heroImages && cloud.heroImages.length){ siteData.heroImages = cloud.heroImages; siteData.activeHeroIndex = cloud.activeHeroIndex ?? 0; changed = true; }
+    if (changed) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(siteData));
       renderAll();
     }
-  } catch(e) {}
+  } catch(e) { /* Cloud unavailable — default content already showing */ }
 }
 
 // ─── SAVE NOTIFICATION TO SUPABASE ──────────
@@ -1129,81 +1028,12 @@ function scrollMenuSec(id, link) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// Admin login on Enter key
-
-function togglePwVisibility() {
-  const input = document.getElementById('adminPwInput');
-  const isHidden = input.type === 'password';
-  input.type = isHidden ? 'text' : 'password';
-  document.getElementById('eyeIcon').innerHTML = isHidden
-    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>'
-    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
-}
-document.getElementById('adminPwInput').addEventListener('keydown', e => { if (e.key === 'Enter') tryAdminLogin(); });
-
 // ═══════════════════════════════════════════
-// SUPABASE DATABASE SETUP
+// INIT
 // ═══════════════════════════════════════════
 
-async function setupDatabase() {
-  const msg = document.getElementById('dbStatusMsg');
-  if (msg) msg.textContent = '⏳ Setting up database table...';
 
-  // Create kawanoya_settings table via SQL using Supabase REST
-  // We use a workaround: try to upsert a test row — if table doesn't exist, show instructions
-  try {
-    const testResult = await sb.setSingle('kawanoya_settings', '__test__', { ok: true });
-    // Try reading it back
-    const readResult = await sb.getSingle('kawanoya_settings', '__test__');
-    if (readResult) {
-      if (msg) msg.innerHTML = '✅ Cloud database is working!<br/>Your photos will now be visible to all visitors.';
-      showToast('Cloud Database Ready ✓', 'All your content will now sync to visitors worldwide!');
-      // Push current data to cloud
-      await syncToSupabase();
-    } else {
-      showDbInstructions(msg);
-    }
-  } catch(e) {
-    showDbInstructions(msg);
-  }
-}
 
-function showDbInstructions(msg) {
-  if (msg) msg.innerHTML = `⚠️ Table not created yet.<br/><br/>
-    <strong style="color:var(--gold)">Do this once in Supabase:</strong><br/>
-    1. Go to supabase.com → your Kawanoya project<br/>
-    2. Tap the <strong>SQL Editor</strong> icon (left sidebar)<br/>
-    3. Tap <strong>New query</strong><br/>
-    4. Paste this SQL and tap Run:<br/><br/>
-    <code style="background:rgba(245,240,232,.08);padding:.5rem;display:block;font-size:.7rem;color:var(--gold);word-break:break-all">
-    create table if not exists kawanoya_settings (
-      id bigint generated always as identity primary key,
-      key text unique not null,
-      value text,
-      created_at timestamptz default now()
-    );<br/>
-    alter table kawanoya_settings enable row level security;<br/>
-    create policy "public read" on kawanoya_settings for select using (true);<br/>
-    create policy "public write" on kawanoya_settings for all using (true);
-    </code><br/>
-    5. Come back here and tap <strong>Force Sync to Cloud</strong>`;
-  showToast('One More Step', 'Check the admin panel for SQL instructions.');
-}
-
-async function forceSyncToCloud() {
-  const msg = document.getElementById('dbStatusMsg');
-  if (msg) msg.textContent = '⏳ Syncing all your data to cloud...';
-  showSyncIndicator(true);
-  try {
-    await syncToSupabase();
-    if (msg) msg.innerHTML = '✅ Synced! All visitors can now see your photos and menu.';
-    showToast('Synced to Cloud ✓', 'All photos and content pushed to cloud!');
-  } catch(e) {
-    if (msg) msg.textContent = '❌ Sync failed. Check your internet connection and try again.';
-    showToast('Sync Failed', 'Check internet connection and try again.');
-  }
-  showSyncIndicator(false);
-}
 
 // ─────────────────────────────────────────
 // Init — load local data immediately, then pull latest from Supabase cloud
