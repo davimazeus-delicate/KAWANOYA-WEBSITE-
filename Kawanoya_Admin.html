@@ -634,6 +634,7 @@ async function initDashboard() {
   renderAll();
   loadInfoForm();
   await loadOrders();
+  await loadManagerBadge();
   document.getElementById('cloudStatus').innerHTML = '<span>Connected ✓</span>';
 }
 
@@ -1090,22 +1091,17 @@ function showMgrSQL() {
 async function loadManagerBadge() {
   try {
     const rows = await sb.get('kawanoya_managers', 'status=eq.pending&select=id');
+    const count = Array.isArray(rows) ? rows.length : 0;
     const badge = document.getElementById('mgrBadge');
-    if(badge){ badge.textContent=rows.length; badge.className='nav-badge'+(rows.length>0?' show':''); }
-  } catch {}
+    if(badge){ badge.textContent=count; badge.className='nav-badge'+(count>0?' show':''); }
+    return count;
+  } catch(e) {
+    console.warn('Manager badge load failed:', e);
+    return 0;
+  }
 }
 
-// Add patch to sb helpers if missing
-if (!sb.patch) {
-  sb.patch = async function(table, id, body) {
-    try {
-      await fetch(SUPABASE_URL+'/rest/v1/'+table+'?id=eq.'+id, {
-        method:'PATCH',
-        headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},
-        body:JSON.stringify(body)});
-    } catch(e){}
-  };
-}
+// sb.patch is now built into the sb object above
 </script>
 </body>
 </html>
