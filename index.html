@@ -156,6 +156,8 @@ section{position:relative;overflow:hidden}
 .menu-item-name{font-family:var(--serif);font-size:1rem;color:var(--cream);margin-bottom:.2rem}
 .menu-item-desc{font-size:.78rem;color:rgba(245,240,232,.4);font-weight:300;line-height:1.5}
 .menu-item-price{font-family:var(--serif);font-size:1.15rem;color:var(--gold);font-weight:300;white-space:nowrap}
+.menu-order-btn{display:inline-block;margin-top:.55rem;padding:.38rem .85rem;background:transparent;border:1px solid rgba(201,168,76,.35);color:var(--gold);font-family:var(--sans);font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;transition:all .2s}
+.menu-order-btn:hover{background:var(--gold);color:var(--ink)}
 .menu-item-tag{display:inline-block;font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;background:rgba(139,26,26,.25);color:#e06060;padding:.12rem .45rem;margin-left:.4rem;vertical-align:middle}
 
 /* ─── ORDER ─── */
@@ -268,6 +270,18 @@ footer{background:#060606;border-top:1px solid rgba(201,168,76,.1);padding:3.5re
 .toast{position:fixed;bottom:2rem;right:2rem;background:var(--ink-2);border:1px solid rgba(201,168,76,.3);padding:.9rem 1.4rem;z-index:9999;font-size:.8rem;color:var(--cream);max-width:290px;transform:translateY(80px);opacity:0;transition:all .35s cubic-bezier(.4,0,.2,1);font-weight:300}
 .toast.show{transform:translateY(0);opacity:1}
 .toast-title{font-family:var(--serif);color:var(--gold);font-size:.95rem;margin-bottom:.25rem}
+
+/* Customer order form */
+.cust-inp{width:100%;background:rgba(245,240,232,.05);border:1px solid rgba(245,240,232,.12);color:var(--cream);padding:.6rem .8rem;font-family:var(--sans);font-size:.82rem;outline:none;margin-bottom:.45rem;display:block}
+.cust-inp:focus{border-color:var(--gold)}
+.cust-inp::placeholder{color:rgba(245,240,232,.2)}
+/* Quantity buttons */
+.qty-btn{width:26px;height:26px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.25);color:var(--gold);font-size:1rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .18s;font-family:var(--sans)}
+.qty-btn:hover{background:var(--gold);color:var(--ink)}
+.qty-num{font-size:.88rem;color:var(--cream);min-width:18px;text-align:center;font-family:var(--serif)}
+.cart-line{display:flex;align-items:center;padding:.6rem 0;border-bottom:1px solid rgba(245,240,232,.05);font-size:.82rem;gap:.4rem}
+.cart-line-name{color:var(--cream);font-weight:300;flex:1}
+.cart-line-price{color:var(--gold);font-family:var(--serif);font-size:.95rem;min-width:42px;text-align:right}
 </style>
 </head>
 <body>
@@ -419,6 +433,25 @@ footer{background:#060606;border-top:1px solid rgba(201,168,76,.1);padding:3.5re
           <div class="cart-subtotal"><span>Subtotal</span><span id="cartSubtotal">$0</span></div>
           <div class="cart-subtotal"><span id="deliveryLabel">Delivery fee</span><span id="deliveryFee">$4.99</span></div>
           <div class="cart-total-row"><span class="cart-total-label">Total</span><span class="cart-total-val" id="cartTotal">$0</span></div>
+          <!-- Customer Details Form -->
+          <div id="customerForm" style="margin-top:.9rem;border-top:1px solid rgba(201,168,76,.15);padding-top:.9rem">
+            <div id="formTitle" style="font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:.6rem">Delivery Details</div>
+            <input type="text" id="custName" placeholder="Full name *" class="cust-inp"/>
+            <!-- Delivery: phone required. Pickup: phone optional -->
+            <input type="tel" id="custPhone" placeholder="Phone number *" class="cust-inp"/>
+            <!-- Delivery only -->
+            <div id="deliveryFields">
+              <input type="text" id="custAddress" placeholder="Delivery address *" class="cust-inp"/>
+              <input type="time" id="custDelivTime" class="cust-inp" style="color-scheme:dark" title="Preferred delivery time *"/>
+              <div style="font-size:.6rem;color:rgba(245,240,232,.28);margin-top:-.3rem;margin-bottom:.45rem">⏰ Preferred delivery time</div>
+            </div>
+            <!-- Pickup only -->
+            <div id="pickupFields" style="display:none">
+              <input type="date" id="custPickupDate" class="cust-inp" style="color-scheme:dark"/>
+              <input type="time" id="custPickupTime" class="cust-inp" style="color-scheme:dark"/>
+            </div>
+            <div id="custFormErr" style="font-size:.72rem;color:#e06060;min-height:1rem;margin-bottom:.3rem"></div>
+          </div>
           <button class="place-order-btn" onclick="placeOrder()">Place Order →</button>
         </div>
         <div class="order-done" id="orderDone">
@@ -758,6 +791,7 @@ function renderMenu() {
             <div class="menu-item-info">
               <div class="menu-item-name">${item.name}${item.tag ? `<span class="menu-item-tag">${item.tag}</span>` : ''}</div>
               <div class="menu-item-desc">${item.desc}</div>
+              <button class="menu-order-btn" onclick="addToCartAndScroll(this)" data-name="${item.name}" data-price="${item.price}">Order Now →</button>
             </div>
             <div class="menu-item-price">${item.price}</div>
           </div>`).join('')}
@@ -882,11 +916,26 @@ function scrollToOrder(name, price) {
   setTimeout(() => addToCart(name, price), 600);
 }
 
+function addToCartAndScroll(btn) {
+  const name  = btn.getAttribute('data-name');
+  const price = btn.getAttribute('data-price');
+  scrollToOrder(name, price);
+}
+
 function setOrderType(btn, type) {
   document.querySelectorAll('.ot').forEach(b => b.classList.remove('active'));
   btn.classList.add('active'); orderType = type;
-  document.getElementById('deliveryLabel').textContent = type + ' fee';
-  document.getElementById('deliveryFee').textContent = type === 'Delivery' ? '$4.99' : 'Free';
+  document.getElementById('deliveryLabel').textContent = type === 'Delivery' ? 'Delivery fee' : 'Pickup (no fee)';
+  document.getElementById('deliveryFee').textContent   = type === 'Delivery' ? '$4.99' : 'Free';
+  // Show/hide correct fields
+  const df    = document.getElementById('deliveryFields');
+  const pf    = document.getElementById('pickupFields');
+  const title = document.getElementById('formTitle');
+  const phone = document.getElementById('custPhone');
+  if(df)    df.style.display  = type === 'Delivery' ? 'block' : 'none';
+  if(pf)    pf.style.display  = type === 'Pickup'   ? 'block' : 'none';
+  if(title) title.textContent = type === 'Delivery' ? 'Delivery Details' : 'Pickup Details';
+  if(phone) phone.placeholder = type === 'Delivery' ? 'Phone number *' : 'Phone number (optional)';
   renderCart();
 }
 
@@ -899,12 +948,36 @@ function addToCart(name, price) {
   showToast('Added ✓', name + ' added to your order.');
 }
 
+function changeQty(idx, delta) {
+  if (!cart[idx]) return;
+  cart[idx].qty += delta;
+  if (cart[idx].qty <= 0) cart.splice(idx, 1);
+  renderCart();
+}
+
 function renderCart() {
   const body = document.getElementById('cartBody');
   const totals = document.getElementById('cartTotals');
   document.getElementById('orderDone').classList.remove('show');
   if (!cart.length) { body.innerHTML = '<div class="cart-empty">🍜<br/>Add dishes to begin</div>'; totals.style.display = 'none'; return; }
-  body.innerHTML = cart.map(i => `<div class="cart-line"><span class="cart-line-name">${i.name} ×${i.qty}</span><span class="cart-line-price">${i.price}</span></div>`).join('');
+  body.innerHTML = cart.map((item,idx) => {
+    const unitPrice = parseFloat(item.price.replace('$','')) || 0;
+    const lineTotal = '$' + (unitPrice * item.qty).toFixed(2);
+    const unitLabel = item.qty > 1 ? `<span style="font-size:.6rem;color:rgba(245,240,232,.3);display:block;text-align:right">${item.price} each</span>` : '';
+    return `
+    <div class="cart-line">
+      <span class="cart-line-name">${item.name}</span>
+      <div style="display:flex;align-items:center;gap:.4rem;margin-left:auto">
+        <button class="qty-btn" onclick="changeQty(${idx},-1)">−</button>
+        <span class="qty-num">${item.qty}</span>
+        <button class="qty-btn" onclick="changeQty(${idx},1)">+</button>
+        <div style="text-align:right">
+          <span class="cart-line-price">${lineTotal}</span>
+          ${unitLabel}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
   const sub = cart.reduce((s, i) => s + parseFloat(i.price.replace('$', '')) * i.qty, 0);
   const fee = orderType === 'Delivery' ? 4.99 : 0;
   document.getElementById('cartSubtotal').textContent = '$' + sub.toFixed(2);
@@ -959,19 +1032,63 @@ async function saveNotif(obj) {
 
 // ─── PLACE ORDER ────────────────────────────
 function placeOrder() {
-  const id = 'ORD-' + Date.now().toString().slice(-4);
-  const now = new Date();
-  const t = now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + ' - ' + now.toLocaleDateString([],{month:'short',day:'numeric'});
+  const name     = (document.getElementById('custName')?.value || '').trim();
+  const phone    = (document.getElementById('custPhone')?.value || '').trim();
+  const address  = (document.getElementById('custAddress')?.value || '').trim();
+  const delivTime= (document.getElementById('custDelivTime')?.value || '').trim();
+  const pDate    = (document.getElementById('custPickupDate')?.value || '').trim();
+  const pTime    = (document.getElementById('custPickupTime')?.value || '').trim();
+  const errEl    = document.getElementById('custFormErr');
+
+  // Validate
+  if (!name) { if(errEl) errEl.textContent = 'Please enter your full name.'; return; }
+  if (orderType === 'Delivery') {
+    if (!phone)    { if(errEl) errEl.textContent = 'Please enter your phone number.'; return; }
+    if (!address)  { if(errEl) errEl.textContent = 'Please enter your delivery address.'; return; }
+    if (!delivTime){ if(errEl) errEl.textContent = 'Please select a preferred delivery time.'; return; }
+  }
+  if (orderType === 'Pickup') {
+    if (!pDate) { if(errEl) errEl.textContent = 'Please select a pickup date.'; return; }
+    if (!pTime) { if(errEl) errEl.textContent = 'Please select a pickup time.'; return; }
+  }
+  if(errEl) errEl.textContent = '';
+
+  const id    = 'ORD-' + Date.now().toString().slice(-4);
   const items = cart.map(i => i.name + ' x' + i.qty + ' (' + i.price + ')').join(', ');
-  const sub = cart.reduce((s,i) => s + parseFloat(i.price.replace('$','')) * i.qty, 0);
-  const fee = orderType === 'Delivery' ? 4.99 : 0;
+  const sub   = cart.reduce((s,i) => s + parseFloat(i.price.replace('$','')) * i.qty, 0);
+  const fee   = orderType === 'Delivery' ? 4.99 : 0;
   const total = '$' + (sub + fee).toFixed(2);
-  saveNotif({ order_id:id, order_type:orderType, kind:'order', items, total,
-    customer_name:'', customer_phone:'', status:'new', created_at:new Date().toISOString() });
+
+  // Build detail line shown in dashboard
+  let detail = '';
+  if (orderType === 'Delivery') {
+    const fmt = delivTime ? new Date('1970-01-01T'+delivTime).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
+    detail = 'Deliver to: ' + address + (fmt ? ' | Time: ' + fmt : '');
+  } else {
+    const dFmt = pDate ? new Date(pDate+'T12:00:00').toLocaleDateString([],{weekday:'short',month:'short',day:'numeric'}) : '';
+    const tFmt = pTime ? new Date('1970-01-01T'+pTime).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
+    detail = 'Pickup: ' + dFmt + ' at ' + tFmt;
+  }
+
+  saveNotif({
+    order_id: id, order_type: orderType, kind: 'order',
+    items: items + ' | ' + detail,
+    total,
+    customer_name:  name,
+    customer_phone: phone || 'Not provided',
+    status: 'new',
+    created_at: new Date().toISOString()
+  });
+
+  // Reset UI
   document.getElementById('cartTotals').style.display = 'none';
   document.getElementById('cartBody').innerHTML = '';
   document.getElementById('orderDone').classList.add('show');
-  showToast('Order Placed! ✓', orderType + ' order confirmed. Est. 30-40 min.');
+  ['custName','custPhone','custAddress','custDelivTime','custPickupDate','custPickupTime'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value = '';
+  });
+  cart = [];
+  showToast('Order Placed! ✓', orderType + ' order confirmed. Est. 30–40 min.');
 }
 function resetCart() { cart = []; renderCart(); }
 
