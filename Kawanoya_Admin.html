@@ -910,13 +910,47 @@ async function deleteOrder(id) {
 // ═══════════════════════════════════════════
 // HERO
 // ═══════════════════════════════════════════
-function uploadHero(input) {
-  Array.from(input.files).forEach(file => {
-    const r = new FileReader();
-    r.onload = e => { siteData.heroImages.push({id:Date.now()+Math.random(), src:e.target.result, label:file.name}); if(siteData.activeHeroIndex<0) siteData.activeHeroIndex=0; saveLocal(); pushCloud(); renderHeroGrid(); showToast('Hero Uploaded ✓','Background updated for all visitors.'); };
-    r.readAsDataURL(file);
+// ── Supabase Storage Upload Helper ──────────────────────────────────────────
+const STORAGE_BUCKET = 'kawanoya-images';
+
+async function uploadToStorage(file, folder) {
+  const ext      = file.name.split('.').pop();
+  const filename = folder + '/' + Date.now() + '-' + Math.random().toString(36).slice(2) + '.' + ext;
+  const res = await fetch(SUPABASE_URL + '/storage/v1/object/' + STORAGE_BUCKET + '/' + filename, {
+    method: 'POST',
+    headers: {
+      apikey:        SUPABASE_KEY,
+      Authorization: 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': file.type,
+      'x-upsert':    'true'
+    },
+    body: file
   });
-  input.value='';
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error('Upload failed: ' + err);
+  }
+  // Return public URL
+  return SUPABASE_URL + '/storage/v1/object/public/' + STORAGE_BUCKET + '/' + filename;
+}
+
+async function uploadHero(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  showToast('Uploading...', 'Please wait while your photo uploads.');
+  for (const file of files) {
+    try {
+      const url = await uploadToStorage(file, 'hero');
+      siteData.heroImages.push({ id: Date.now() + Math.random(), src: url, label: file.name });
+      if (siteData.activeHeroIndex < 0) siteData.activeHeroIndex = 0;
+      saveLocal(); pushCloud(); renderHeroGrid();
+      showToast('Hero Uploaded ✓', 'Background updated for all visitors.');
+    } catch(e) {
+      showToast('Upload Failed', 'Could not upload photo. Check Supabase Storage bucket.');
+      console.error(e);
+    }
+  }
+  input.value = '';
 }
 function addHeroUrl() {
   const url = document.getElementById('heroUrl').value.trim();
@@ -939,10 +973,23 @@ function renderHeroGrid() {
 // ═══════════════════════════════════════════
 // GALLERY
 // ═══════════════════════════════════════════
-function uploadGallery(input) {
-  let done=0; const files=Array.from(input.files);
-  files.forEach(file=>{ const r=new FileReader(); r.onload=e=>{ siteData.galleryImages.push({id:Date.now()+Math.random(),src:e.target.result,name:file.name.replace(/\.[^.]+$/,''),category:''}); done++; if(done===files.length){saveLocal();pushCloud();renderGalleryGrid();showToast(files.length+' Photo(s) Added ✓','Gallery updated for all visitors.');} }; r.readAsDataURL(file); });
-  input.value='';
+async function uploadGallery(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  showToast('Uploading...', files.length + ' photo(s) uploading, please wait...');
+  let done = 0;
+  for (const file of files) {
+    try {
+      const url = await uploadToStorage(file, 'gallery');
+      siteData.galleryImages.push({ id: Date.now() + Math.random(), src: url, name: file.name.replace(/\.[^.]+$/, ''), category: '' });
+      done++;
+    } catch(e) {
+      console.error('Gallery upload failed:', e);
+    }
+  }
+  saveLocal(); pushCloud(); renderGalleryGrid();
+  showToast(done + ' Photo(s) Added ✓', 'Gallery updated for all visitors.');
+  input.value = '';
 }
 function addGalleryUrl() {
   const url=document.getElementById('galUrl').value.trim();
@@ -989,9 +1036,18 @@ function renderDishEditors() {
       </div>
     </div>`).join('');
 }
-function uploadDishImg(input, id) {
-  const file=input.files[0]; if(!file) return;
-  const r=new FileReader(); r.onload=e=>{ const d=siteData.dishes.find(x=>x.id===id); if(d){d.img=e.target.result;saveLocal();pushCloud();renderDishEditors();showToast('Photo Updated ✓',d.name+' photo changed.');} }; r.readAsDataURL(file); input.value='';
+async function uploadDishImg(input, id) {
+  const file = input.files[0]; if (!file) return;
+  showToast('Uploading...', 'Uploading dish photo...');
+  try {
+    const url = await uploadToStorage(file, 'dishes');
+    const d = siteData.dishes.find(x => x.id === id);
+    if (d) { d.img = url; saveLocal(); pushCloud(); renderDishEditors(); showToast('Photo Updated ✓', d.name + ' photo changed.'); }
+  } catch(e) {
+    showToast('Upload Failed', 'Could not upload photo. Check Supabase Storage bucket.');
+    console.error(e);
+  }
+  input.value = '';
 }
 function updateDish(id, field, val) { const d=siteData.dishes.find(x=>x.id===id); if(d){d[field]=val;} }
 function saveDishes() { saveLocal(); pushCloud(); showToast('Saved ✓','Featured dishes updated for all visitors.'); }
@@ -1036,9 +1092,18 @@ function renderMenuEditors() {
         </div>`).join('')}
     </div>`).join('');
 }
-function uploadMenuImg(input,id,cat) {
-  const file=input.files[0]; if(!file) return;
-  const r=new FileReader(); r.onload=e=>{ const item=siteData.menuItems[cat].find(x=>x.id===id); if(item){item.img=e.target.result;saveLocal();pushCloud();renderMenuEditors();showToast('Photo Updated ✓',item.name+' photo updated.');} }; r.readAsDataURL(file); input.value='';
+async function uploadMenuImg(input, id, cat) {
+  const file = input.files[0]; if (!file) return;
+  showToast('Uploading...', 'Uploading menu photo...');
+  try {
+    const url = await uploadToStorage(file, 'menu');
+    const item = siteData.menuItems[cat].find(x => x.id === id);
+    if (item) { item.img = url; saveLocal(); pushCloud(); renderMenuEditors(); showToast('Photo Updated ✓', item.name + ' photo updated.'); }
+  } catch(e) {
+    showToast('Upload Failed', 'Could not upload photo. Check Supabase Storage bucket.');
+    console.error(e);
+  }
+  input.value = '';
 }
 function updateMenuItem(id,cat,field,val) { const item=siteData.menuItems[cat].find(x=>x.id===id); if(item) item[field]=val; }
 function saveMenu() { saveLocal(); pushCloud(); showToast('Menu Saved ✓','All menu items updated for visitors.'); }
@@ -1057,9 +1122,19 @@ function addMenuItem() {
   newItemImgData=''; document.getElementById('newItemImgPrev').innerHTML='🍽️';
   showToast('Item Added ✓',name+' added to '+catNames[cat]+'.');
 }
-function previewNewItemImg(input) {
-  const file=input.files[0]; if(!file) return;
-  const r=new FileReader(); r.onload=e=>{ newItemImgData=e.target.result; document.getElementById('newItemImgPrev').innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover"/>`; }; r.readAsDataURL(file); input.value='';
+async function previewNewItemImg(input) {
+  const file = input.files[0]; if (!file) return;
+  showToast('Uploading...', 'Uploading image...');
+  try {
+    const url = await uploadToStorage(file, 'menu');
+    newItemImgData = url;
+    document.getElementById('newItemImgPrev').innerHTML = '<img src="' + url + '" style="width:100%;height:100%;object-fit:cover"/>';
+    showToast('Image Ready ✓', 'Image uploaded successfully.');
+  } catch(e) {
+    showToast('Upload Failed', 'Could not upload image.');
+    console.error(e);
+  }
+  input.value = '';
 }
 
 // ═══════════════════════════════════════════
