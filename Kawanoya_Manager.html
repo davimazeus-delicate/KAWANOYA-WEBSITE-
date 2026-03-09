@@ -201,6 +201,22 @@ textarea.mgr-input{resize:vertical;min-height:72px}
   .auth-card{padding:1.5rem}
   .form-grid-2{grid-template-columns:1fr}
 }
+
+.rev-filter-btn{padding:.32rem .75rem;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;background:rgba(245,240,232,.04);border:1px solid rgba(245,240,232,.1);color:rgba(245,240,232,.38);cursor:pointer;font-family:var(--sans);transition:all .2s}
+.rev-filter-btn.active,.rev-filter-btn:hover{background:rgba(201,168,76,.1);border-color:var(--gold);color:var(--gold)}
+.mgr-rev-card{background:rgba(245,240,232,.03);border:1px solid rgba(245,240,232,.07);padding:1.1rem 1.3rem;margin-bottom:.75rem}
+.mgr-rev-card.flagged-card{border-color:rgba(224,96,96,.3);background:rgba(224,96,96,.03)}
+.mgr-rev-card.approved-card{border-color:rgba(107,207,107,.18)}
+.mgr-rev-card.hidden-card{opacity:.4}
+
+
+.role-badge{display:inline-flex;align-items:center;gap:.25rem;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;padding:.18rem .55rem;font-weight:600}
+.role-badge.super-admin{background:linear-gradient(135deg,rgba(201,168,76,.25),rgba(201,168,76,.1));color:var(--gold);border:1px solid rgba(201,168,76,.4)}
+.role-badge.moderator{background:rgba(107,207,107,.12);color:var(--green);border:1px solid rgba(107,207,107,.25)}
+.role-badge.viewer{background:rgba(245,240,232,.06);color:rgba(245,240,232,.45);border:1px solid rgba(245,240,232,.12)}
+.role-badge.custom{background:rgba(100,149,237,.12);color:#7eb3ff;border:1px solid rgba(100,149,237,.25)}
+.role-badge.manager{background:rgba(26,58,107,.25);color:var(--blue);border:1px solid rgba(26,58,107,.4)}
+
 </style>
 </head>
 <body>
@@ -353,7 +369,7 @@ textarea.mgr-input{resize:vertical;min-height:72px}
       <div class="user-avatar" id="userAvatar">M</div>
       <div>
         <div class="user-name" id="userName">Manager</div>
-        <div class="user-role">Restaurant Manager</div>
+        <div id="userBadgeDisplay" style="margin-top:.3rem"></div>
       </div>
     </div>
     <nav class="sidebar-nav">
@@ -375,6 +391,10 @@ textarea.mgr-input{resize:vertical;min-height:72px}
       </button>
       <button class="nav-item" onclick="showPage('sales',this)">
         <span class="nav-icon">💰</span>Daily Sales
+      </button>
+      <button class="nav-item" onclick="showPage('reviews',this)">
+        <span class="nav-icon">⭐</span>Reviews
+        <span class="nav-badge" id="mgrRevBadge" style="display:none">0</span>
       </button>
     </nav>
     <div class="sidebar-foot">
@@ -531,6 +551,39 @@ textarea.mgr-input{resize:vertical;min-height:72px}
     </div>
   </div>
 </div>
+    <!-- REVIEWS PAGE -->
+    <div class="page" id="page-reviews" style="display:none;padding:2rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:.8rem">
+        <div>
+          <div style="font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:.2rem">Customer Reviews</div>
+          <div style="font-size:.78rem;color:rgba(245,240,232,.35)">Approve, hide or flag customer submitted reviews</div>
+        </div>
+        <button class="action-btn" onclick="loadMgrReviews()">🔄 Refresh</button>
+      </div>
+
+      <!-- Filter bar -->
+      <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.3rem;align-items:center">
+        <span style="font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(245,240,232,.25)">Filter:</span>
+        <button class="rev-filter-btn active" onclick="filterMgrReviews('all',this)">All</button>
+        <button class="rev-filter-btn" onclick="filterMgrReviews('pending',this)">⏳ Pending</button>
+        <button class="rev-filter-btn" onclick="filterMgrReviews('approved',this)">✅ Approved</button>
+        <button class="rev-filter-btn" onclick="filterMgrReviews('hidden',this)">🚫 Hidden</button>
+        <button class="rev-filter-btn" onclick="filterMgrReviews('flagged',this)">⚠️ Flagged</button>
+        <button class="rev-filter-btn" onclick="filterMgrReviews('low',this)">⭐ 1-2 Stars</button>
+      </div>
+
+      <div id="mgrReviewsList"><div class="empty-state">Loading reviews...</div></div>
+    </div>
+    <!-- SUPER ADMIN: APPROVE MANAGERS -->
+    <div class="page" id="page-approveManagers" style="display:none;padding:2rem">
+      <div style="margin-bottom:1.5rem">
+        <div style="font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:.2rem">⭐ Super Admin</div>
+        <div style="font-size:.78rem;color:rgba(245,240,232,.35)">Approve or reject pending manager account requests</div>
+      </div>
+      <div id="superAdminManagersList"><div class="empty-state">Loading...</div></div>
+    </div>
+
+
 
 <script>
 // ═══════════════════════════════════════════
@@ -941,9 +994,11 @@ function updateStats() {
   document.getElementById('ovCompleted').textContent    = completed.length;
   document.getElementById('ovPending').textContent      = pending.length;
 
+  const badgeNotifs = allOrders.filter(o => o.kind === 'badge_assigned' && o.status === 'new').length;
+  const totalNew = pending.length + badgeNotifs;
   const badge = document.getElementById('navBadge');
-  badge.textContent = pending.length;
-  badge.className   = 'nav-badge' + (pending.length > 0 ? ' show' : '');
+  badge.textContent = totalNew;
+  badge.className   = 'nav-badge' + (totalNew > 0 ? ' show' : '');
 }
 
 function parseMoney(str) {
@@ -956,9 +1011,30 @@ function parseMoney(str) {
 // ORDER CARD
 // ═══════════════════════════════════════════
 function orderCard(o) {
-  const isRes = o.kind === 'reservation';
-  const isMgr = o.kind === 'manager_request';
-  const icon  = isRes ? '📅' : isMgr ? '👤' : '🍜';
+  const isRes   = o.kind === 'reservation';
+  const isMgr   = o.kind === 'manager_request';
+  const isBadge = o.kind === 'badge_assigned';
+
+  // ── Badge notification card ──────────────────────────────────────────
+  if (isBadge) {
+    const t = o.created_at ? new Date(o.created_at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + ' · ' + new Date(o.created_at).toLocaleDateString([],{month:'short',day:'numeric'}) : '';
+    const badgeMap = { 'Super Admin':'super-admin', 'Moderator':'moderator', 'Manager':'manager', 'Viewer':'viewer' };
+    const badgeCls = badgeMap[o.total] || 'custom';
+    return `<div class="order-card" style="border-color:rgba(201,168,76,.3);background:rgba(201,168,76,.04)" id="oc-${o.id}">
+      <div class="oc-top">
+        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+          <span class="badge" style="background:rgba(201,168,76,.15);color:var(--gold)">🏷️ Badge Assigned</span>
+          <span class="role-badge ${badgeCls}" style="font-size:.55rem">${o.total || 'Badge'}</span>
+        </div>
+        <div class="oc-time">${t}</div>
+      </div>
+      <div class="oc-items" style="color:rgba(245,240,232,.7);margin-top:.5rem">${o.items || ''}</div>
+      <div style="font-size:.65rem;color:rgba(245,240,232,.25);margin-top:.4rem">From: Admin</div>
+    </div>`;
+  }
+
+  // ── Regular order / reservation card ────────────────────────────────
+  const icon    = isRes ? '📅' : isMgr ? '👤' : '🍜';
   const typeLbl = isRes ? 'Reservation' : isMgr ? 'Manager Request' : (o.order_type || 'Order');
   const typeCls = isRes ? 'bdg-res' : (o.order_type === 'Delivery' ? 'bdg-delivery' : 'bdg-pickup');
   const statCls = o.status === 'completed' ? 'bdg-done' : 'bdg-new';
@@ -974,7 +1050,7 @@ function orderCard(o) {
       </div>
       <div class="oc-time">${t}</div>
     </div>
-    ${o.customer_name || o.customer_phone ? `<div class="oc-customer">👤 ${o.customer_name || ''} ${o.customer_phone ? '· 📞 ' + o.customer_phone : ''}</div>` : ''}
+    ${o.customer_name ? `<div class="oc-customer">👤 ${o.customer_name}${o.customer_phone && o.kind !== 'badge_assigned' ? ' · 📞 ' + o.customer_phone : ''}</div>` : ''}
     <div class="oc-items">${o.items || ''}</div>
     <div class="oc-foot">
       <div class="oc-total">${o.total || ''}</div>
@@ -996,11 +1072,19 @@ function renderRecent() {
 
 function renderNotifList() {
   const el = document.getElementById('notifList');
+  // Include badge notifications, exclude manager_request
   let list = allOrders.filter(o => o.kind !== 'manager_request');
-  if (currentFilter === 'order')       list = list.filter(o => o.kind === 'order');
+  if (currentFilter === 'order')          list = list.filter(o => o.kind === 'order');
   else if (currentFilter === 'reservation') list = list.filter(o => o.kind === 'reservation');
-  else if (currentFilter === 'new')    list = list.filter(o => o.status === 'new');
+  else if (currentFilter === 'new')       list = list.filter(o => o.status === 'new');
   else if (currentFilter === 'completed') list = list.filter(o => o.status === 'completed');
+  // Always show badge notifications in the all/new views
+  const badges = allOrders.filter(o => o.kind === 'badge_assigned' && o.status === 'new');
+  if (currentFilter === 'all' || currentFilter === 'new') {
+    // Merge badge notifications at the top, avoid duplicates
+    const ids = new Set(list.map(i => i.id));
+    badges.forEach(b => { if(!ids.has(b.id)) list.unshift(b); });
+  }
   el.innerHTML = list.length ? list.map(orderCard).join('') : '<div class="empty-state"><span class="empty-icon">🔔</span>No notifications yet.</div>';
 }
 
@@ -1404,6 +1488,205 @@ async function initPush(fetchFn) {
 }
 
 function updateBellBtn(){const btn=document.getElementById("notifToggleBtn");if(!btn)return;if(Notification.permission==="granted"){btn.textContent="🔔 Bell ON";btn.style.cssText="background:rgba(45,106,79,.15);color:var(--green2);border-color:rgba(107,207,107,.25)"}else if(Notification.permission==="denied"){btn.textContent="🔕 Blocked";btn.style.color="#e06060"}}
+
+// ─── MANAGER REVIEWS ────────────────────────────
+const MGR_BAD_WORDS = ["stupid", "idiot", "hate", "terrible", "awful", "disgusting", "horrible", "worst", "crap", "trash", "rubbish", "pathetic", "useless", "dumb", "sucks", "suck", "garbage", "nasty", "rude", "filthy", "bad", "ugly"];
+let allMgrReviews = [];
+let mgrRevFilter = 'all';
+
+function mgrTimeAgo(dateStr) {
+  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+  if (diff < 60)    return 'just now';
+  if (diff < 3600)  return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  if (diff < 604800)return Math.floor(diff/86400) + 'd ago';
+  if (diff < 2592000) return Math.floor(diff/604800) + ' weeks ago';
+  return Math.floor(diff/2592000) + ' months ago';
+}
+
+function mgrIsFlagged(text) {
+  const lower = (text||'').toLowerCase();
+  return MGR_BAD_WORDS.some(w => lower.includes(w));
+}
+
+async function loadMgrReviews() {
+  const cont = document.getElementById('mgrReviewsList');
+  if(!cont) return;
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/kawanoya_reviews?order=created_at.desc', {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+    });
+    allMgrReviews = await r.json() || [];
+    // Auto-flag bad words
+    for (const rv of allMgrReviews) {
+      if (rv.status === 'pending' && mgrIsFlagged(rv.body)) {
+        await mgrUpdateReview(rv.id, 'flagged', false);
+        rv.status = 'flagged';
+      }
+    }
+    const pending = allMgrReviews.filter(r => r.status === 'pending' || r.status === 'flagged').length;
+    const badge = document.getElementById('mgrRevBadge');
+    if(badge) { badge.textContent = pending; badge.style.display = pending > 0 ? 'inline-flex' : 'none'; }
+    renderMgrReviews();
+  } catch(e) {
+    if(cont) cont.innerHTML = '<div class="empty-state">Could not load reviews.</div>';
+  }
+}
+
+function filterMgrReviews(filter, btn) {
+  mgrRevFilter = filter;
+  document.querySelectorAll('.rev-filter-btn').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderMgrReviews();
+}
+
+function renderMgrReviews() {
+  const cont = document.getElementById('mgrReviewsList');
+  if(!cont) return;
+  let reviews = allMgrReviews;
+  if (mgrRevFilter === 'pending')  reviews = reviews.filter(r => r.status === 'pending');
+  if (mgrRevFilter === 'approved') reviews = reviews.filter(r => r.status === 'approved');
+  if (mgrRevFilter === 'hidden')   reviews = reviews.filter(r => r.status === 'hidden');
+  if (mgrRevFilter === 'flagged')  reviews = reviews.filter(r => r.status === 'flagged');
+  if (mgrRevFilter === 'low')      reviews = reviews.filter(r => r.stars <= 2);
+  if (!reviews.length) { cont.innerHTML = '<div class="empty-state">No reviews in this category.</div>'; return; }
+  cont.innerHTML = reviews.map(rv => {
+    const flagged  = rv.status === 'flagged' || mgrIsFlagged(rv.body);
+    const approved = rv.status === 'approved';
+    const hidden   = rv.status === 'hidden';
+    const stars    = '★'.repeat(rv.stars||0) + '☆'.repeat(5-(rv.stars||0));
+    return `
+    <div class="mgr-rev-card ${flagged?'flagged-card':''} ${approved?'approved-card':''} ${hidden?'hidden-card':''}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
+        <div>
+          <span style="font-family:var(--serif);font-size:.95rem;color:var(--cream)">${rv.reviewer_name}</span>
+          <span style="font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-left:.5rem">${rv.category}</span>
+          ${flagged?'<span style="font-size:.58rem;background:rgba(224,96,96,.15);color:#e06060;padding:.15rem .4rem;margin-left:.4rem">⚠️ FLAGGED</span>':''}
+        </div>
+        <div style="text-align:right">
+          <div style="color:var(--gold);font-size:.85rem">${stars}</div>
+          <div style="font-size:.58rem;color:rgba(245,240,232,.2)">${mgrTimeAgo(rv.created_at)}</div>
+        </div>
+      </div>
+      <div style="font-size:.8rem;color:rgba(245,240,232,.5);margin-top:.5rem;line-height:1.7;font-style:italic">"${rv.body}"</div>
+      <div style="display:flex;gap:.4rem;margin-top:.7rem;flex-wrap:wrap">
+        ${!approved?`<button class="action-btn" style="background:var(--green);font-size:.6rem;padding:.35rem .7rem" onclick="mgrUpdateReview(${rv.id},'approved',true)">✅ Approve</button>`:''}
+        ${approved?`<button class="action-btn" style="font-size:.6rem;padding:.35rem .7rem" onclick="mgrUpdateReview(${rv.id},'hidden',true)">🚫 Hide</button>`:''}
+        ${hidden?`<button class="action-btn" style="font-size:.6rem;padding:.35rem .7rem" onclick="mgrUpdateReview(${rv.id},'approved',true)">↩ Restore</button>`:''}
+        ${flagged&&!hidden?`<button class="action-btn" style="font-size:.6rem;padding:.35rem .7rem" onclick="mgrUpdateReview(${rv.id},'approved',true)">✅ Approve Anyway</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function mgrUpdateReview(id, status, reload) {
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/kawanoya_reviews?id=eq.' + id, {
+      method: 'PATCH',
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ status })
+    });
+    if(reload) loadMgrReviews();
+  loadManagerBadge_mgr();
+  } catch(e) {}
+}
+
+
+// ─── BADGE DISPLAY & PERMISSIONS ────────────────
+function renderMgrRoleBadge(badge) {
+  if (!badge) return '<span style="font-size:.58rem;color:rgba(245,240,232,.2);font-style:italic">No badge assigned</span>';
+  const map = {
+    super_admin: ['super-admin', '⭐ Super Admin'],
+    moderator:   ['moderator',   '🛡 Moderator'],
+    manager:     ['manager',     '👔 Manager'],
+    viewer:      ['viewer',      '👁 Viewer'],
+  };
+  const [cls, label] = map[badge] || ['custom', '🏷 ' + badge];
+  return `<span class="role-badge ${cls}">${label}</span>`;
+}
+
+async function loadManagerBadge_mgr() {
+  try {
+    const user = supabase_client ? (await supabase_client.auth.getUser())?.data?.user : null;
+    if (!user) return;
+    const r = await fetch(SUPABASE_URL + '/rest/v1/kawanoya_managers?user_id=eq.' + user.id + '&select=badge,first_name,last_name', {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+    });
+    const rows = await r.json();
+    const mgr  = rows?.[0];
+    if (!mgr) return;
+    // Show badge in sidebar
+    const badgeEl = document.getElementById('userBadgeDisplay');
+    if(badgeEl) badgeEl.innerHTML = renderMgrRoleBadge(mgr.badge);
+    // Super Admin: show approve managers nav item
+    if (mgr.badge === 'super_admin') {
+      const existing = document.getElementById('superAdminNavItem');
+      if (!existing) {
+        const nav = document.querySelector('.sidebar-nav');
+        const btn = document.createElement('button');
+        btn.className = 'nav-item';
+        btn.id = 'superAdminNavItem';
+        btn.innerHTML = '<span class="nav-icon">👥</span>Approve Managers <span class="role-badge super-admin" style="margin-left:auto;font-size:.48rem">Super Admin</span>';
+        btn.onclick = function() { showPage('approveManagers', this); loadSuperAdminManagers(); };
+        nav.appendChild(btn);
+      }
+    }
+  } catch(e) {}
+}
+
+// ── Super Admin: approve managers page ────────────────────────────────────────
+async function loadSuperAdminManagers() {
+  const cont = document.getElementById('superAdminManagersList');
+  if(!cont) return;
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/kawanoya_managers?select=*&order=created_at.desc', {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+    });
+    const rows = await r.json() || [];
+    const pending = rows.filter(m => m.status === 'pending');
+    if (!pending.length) { cont.innerHTML = '<div class="empty-state">No pending requests.</div>'; return; }
+    cont.innerHTML = pending.map(m => {
+      const name = [m.first_name, m.last_name].filter(Boolean).join(' ') || m.email || 'Unknown';
+      const date = m.created_at ? new Date(m.created_at).toLocaleDateString([],{month:'short',day:'numeric'}) : '';
+      return `<div style="background:rgba(245,240,232,.03);border:1px solid rgba(245,240,232,.07);padding:1.1rem;margin-bottom:.7rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.7rem">
+        <div>
+          <div style="font-family:var(--serif);font-size:.95rem;color:var(--cream)">${name}</div>
+          <div style="font-size:.65rem;color:rgba(245,240,232,.3)">${m.email||'—'} · Requested ${date}</div>
+        </div>
+        <div style="display:flex;gap:.5rem">
+          <button class="action-btn" style="background:var(--green);font-size:.62rem;padding:.35rem .75rem" onclick="superAdminApprove(${m.id},'${name}')">✅ Approve</button>
+          <button class="action-btn" style="font-size:.62rem;padding:.35rem .75rem;border-color:#e06060;color:#e06060" onclick="superAdminReject(${m.id},'${name}')">✕ Reject</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) { cont.innerHTML = '<div class="empty-state">Could not load managers.</div>'; }
+}
+
+async function superAdminApprove(id, name) {
+  if(!confirm('Approve ' + name + '?')) return;
+  await fetch(SUPABASE_URL + '/rest/v1/kawanoya_managers?id=eq.' + id, {
+    method: 'PATCH',
+    headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify({ status: 'approved' })
+  });
+  showToast('Approved ✓', name + ' can now log in.');
+  loadSuperAdminManagers();
+}
+
+async function superAdminReject(id, name) {
+  if(!confirm('Reject ' + name + '?')) return;
+  await fetch(SUPABASE_URL + '/rest/v1/kawanoya_managers?id=eq.' + id, {
+    method: 'PATCH',
+    headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify({ status: 'rejected' })
+  });
+  showToast('Rejected', name + "'s access has been revoked.");
+  loadSuperAdminManagers();
+}
+
 </script>
 </body>
 </html>

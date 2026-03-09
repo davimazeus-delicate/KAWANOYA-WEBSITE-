@@ -137,6 +137,8 @@ section{position:relative;overflow:hidden}
 .dish-price{font-family:var(--serif);font-size:1.35rem;color:var(--gold);font-weight:300}
 .dish-order-btn{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--cream);background:var(--red);padding:.45rem .9rem;text-decoration:none;transition:background .2s;border:none;cursor:pointer;font-family:var(--sans)}
 .dish-order-btn:hover{background:var(--red-light)}
+.dish-review-btn{font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);background:transparent;padding:.45rem .9rem;border:1px solid rgba(201,168,76,.35);cursor:pointer;font-family:var(--sans);transition:all .2s}
+.dish-review-btn:hover{background:var(--gold);color:var(--ink)}
 
 /* ─── MENU TABLE ─── */
 #menu{background:var(--ink)}
@@ -298,6 +300,127 @@ footer{background:#060606;border-top:1px solid rgba(201,168,76,.1);padding:3.5re
   transform:rotate(-35deg);transform-origin:center;
   user-select:none;
 }
+
+/* ═══════════════════════════════════════════
+   MOBILE RESPONSIVE — full phone optimisation
+   ═══════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* ── Nav ── */
+  .nav-links { display: none; }
+  .hamburger { display: flex; }
+
+  /* ── Hero ── */
+  #hero { min-height: 92vh; padding: 6rem 6vw 4rem; }
+  .hero-kana { font-size: .6rem; }
+  .hero-title { font-size: clamp(2rem, 11vw, 3.2rem); }
+  .hero-tagline { font-size: .78rem; }
+  .hero-actions { flex-direction: column; align-items: center; gap: .7rem; }
+  .hero-actions .btn { width: 80vw; max-width: 320px; text-align: center; }
+
+  /* ── Info strip ── */
+  .strip { gap: 1rem; padding: .8rem 4vw; justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; }
+  .strip-item { flex-shrink: 0; font-size: .62rem; }
+
+  /* ── Section padding ── */
+  .page-section { padding: 4.5rem 5vw; }
+  .section-header { margin-bottom: 2.5rem; }
+  .section-title { font-size: clamp(1.6rem, 7vw, 2.4rem); }
+
+  /* ── About ── */
+  .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+  .about-img-wrap { display: none; }
+  .about-stats { grid-template-columns: repeat(3,1fr); gap: .8rem; }
+  .stat-val { font-size: 1.5rem; }
+
+  /* ── Gallery ── */
+  .gallery-grid { grid-template-columns: repeat(2,1fr); }
+
+  /* ── Featured Dishes ── */
+  .dishes-grid { grid-template-columns: 1fr 1fr; }
+  .dish-item { min-height: 220px; }
+  .dish-name { font-size: 1.1rem; }
+  .dish-price { font-size: 1rem; }
+  .dish-order-btn { font-size: .55rem; padding: .35rem .7rem; }
+
+  /* ── Menu ── */
+  .menu-layout { grid-template-columns: 1fr; gap: 0; }
+  .menu-sidebar { display: flex; overflow-x: auto; gap: 0; padding-bottom: .8rem;
+    border-right: none; border-bottom: 1px solid rgba(245,240,232,.07); margin-bottom: 2rem; }
+  .menu-cat-link { padding: .5rem 1rem; border-bottom: none; border-right: 1px solid rgba(245,240,232,.05);
+    white-space: nowrap; font-size: .8rem; }
+  .menu-item { gap: .8rem; }
+  .menu-item-photo, .menu-item-photo-placeholder { width: 58px; height: 58px; }
+  .menu-item-name { font-size: .92rem; }
+  .menu-item-desc { font-size: .75rem; }
+  .menu-item-price { font-size: .9rem; margin-left: .5rem; }
+
+  /* ── Order section ── */
+  .order-layout { grid-template-columns: 1fr; gap: 2rem; }
+  .cart-box { position: static; }
+  .order-card { gap: .8rem; padding: .9rem; }
+  .order-card-img, .order-card-img-placeholder { width: 58px; height: 58px; }
+  .order-card-name { font-size: .92rem; }
+  .order-card-desc { font-size: .73rem; }
+  .place-order-btn { font-size: .72rem; padding: .85rem; }
+
+  /* ── Reviews ── */
+  .reviews-grid { grid-template-columns: 1fr; gap: 1px; }
+  .review-card { padding: 2rem 1.5rem; }
+  .review-text { font-size: .88rem; }
+
+  /* ── Reservation form ── */
+  .reserve-form-3 { grid-template-columns: 1fr; gap: .7rem; }
+  .form-row-2 { grid-template-columns: 1fr; gap: .7rem; }
+  .form-input { font-size: .85rem; padding: .75rem 1rem; }
+
+  /* ── Location / Visit ── */
+  .location-layout { grid-template-columns: 1fr; gap: 2.5rem; }
+  .map-embed { height: 220px; }
+
+  /* ── Footer ── */
+  .footer-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .footer-bottom { flex-direction: column; text-align: center; gap: .5rem; }
+  .footer-logo { font-size: 1.3rem; }
+  .footer-links { display: flex; flex-direction: column; gap: .4rem; }
+
+  /* ── Cart qty buttons ── */
+  .qty-btn { width: 30px; height: 30px; font-size: 1.1rem; }
+  .cart-line-name { font-size: .8rem; }
+
+  /* ── Customer form inputs ── */
+  .cust-inp { font-size: .88rem; padding: .7rem .9rem; }
+
+  /* ── Watermark ── */
+  .demo-watermark span { font-size: .85rem; }
+}
+
+/* Extra small phones */
+@media (max-width: 380px) {
+  .hero-title { font-size: 2rem; }
+  .dishes-grid { grid-template-columns: 1fr; }
+  .gallery-grid { grid-template-columns: repeat(2,1fr); }
+  .about-stats { grid-template-columns: repeat(3,1fr); }
+  .order-card-img, .order-card-img-placeholder { width: 50px; height: 50px; }
+}
+
+
+.rev-star{font-size:1.6rem;cursor:pointer;color:rgba(201,168,76,.25);transition:color .15s;user-select:none}
+.rev-star.active{color:var(--gold)}
+.rev-star:hover{color:var(--gold)}
+
+
+/* Public review cards */
+.pub-rev-card{background:rgba(245,240,232,.03);border:1px solid rgba(245,240,232,.07);padding:1.4rem 1.6rem;margin-bottom:1rem;transition:border-color .2s}
+.pub-rev-card:hover{border-color:rgba(201,168,76,.2)}
+.pub-rev-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.7rem;gap:1rem;flex-wrap:wrap}
+.pub-rev-name{font-family:var(--serif);font-size:1.05rem;color:var(--cream);font-weight:300}
+.pub-rev-cat{font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-top:.2rem}
+.pub-rev-meta{text-align:right;flex-shrink:0}
+.pub-rev-stars{color:var(--gold);font-size:1rem;letter-spacing:.1rem}
+.pub-rev-time{font-size:.6rem;color:rgba(245,240,232,.25);margin-top:.2rem;letter-spacing:.08em}
+.pub-rev-body{font-size:.85rem;color:rgba(245,240,232,.55);line-height:1.75;font-style:italic}
+
 </style>
 </head>
 <body>
@@ -333,6 +456,7 @@ footer{background:#060606;border-top:1px solid rgba(201,168,76,.1);padding:3.5re
     <li><a href="#menu">Menu</a></li>
     <li><a href="#order">Order</a></li>
     <li><a href="#reviews">Reviews</a></li>
+    <li><a href="#leave-review">Leave Review</a></li>
     <li><a href="#location">Location</a></li>
     <li><a href="#reserve" class="btn nav-cta">Reserve</a></li>
   </ul>
@@ -566,12 +690,7 @@ footer{background:#060606;border-top:1px solid rgba(201,168,76,.1);padding:3.5re
       <div class="info-block reveal"><div class="info-icon">📍</div><div><div class="info-label">Address</div><div class="info-val"><a href="#" id="addressText">123 Sample Street<br/>Your City, State 00000</a></div></div></div>
       <div class="info-block reveal rd1"><div class="info-icon">📞</div><div><div class="info-label">Phone</div><div class="info-val"><a href="tel:+10000000000" id="phoneText">+1 000-000-0000</a></div></div></div>
       <div class="info-block reveal rd2"><div class="info-icon">🕐</div><div><div class="info-label">Hours</div><div class="info-val"><span id="hours1Text">Mon–Thu: 11:30 AM – 9:30 PM</span><br/><span id="hours2Text">Fri–Sat: 11:30 AM – 10:30 PM</span><br/>Sun: 11:00 AM – 9:00 PM<br/><span style="color:var(--gold);font-size:.8rem">🛵 Delivery until 10 PM daily</span></div></div></div>
-      <div class="contact-form reveal rd3">
-        <div class="contact-title">Send a Message</div>
-        <div class="form-row-2"><div class="form-group"><label class="form-label">Name</label><input class="form-input" placeholder="Your name"/></div><div class="form-group"><label class="form-label">Email</label><input class="form-input" placeholder="you@email.com"/></div></div>
-        <div class="form-group" style="margin-bottom:.8rem"><label class="form-label">Message</label><textarea class="form-input" placeholder="Ask about group bookings, events..."></textarea></div>
-        <button class="contact-submit" onclick="showToast('Message Sent ✓','We will respond within 24 hours.')">Send Message →</button>
-      </div>
+
     </div>
     <div class="reveal">
       <iframe class="map-embed" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3154.3!2d-122.4194!3d37.7749!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2sSample+Location!5e0!3m2!1sen!2sus!4v1" allowfullscreen loading="lazy"></iframe>
@@ -584,6 +703,64 @@ footer{background:#060606;border-top:1px solid rgba(201,168,76,.1);padding:3.5re
 </section>
 
 <!-- FOOTER -->
+
+<!-- LEAVE A REVIEW -->
+<section id="leave-review" class="page-section" style="background:var(--ink-2)">
+  <div class="section-header reveal">
+    <span class="section-tag">レビュー · Share Your Experience</span>
+    <h2 class="section-title">Customer <em>Reviews</em></h2>
+    <div class="section-line"></div>
+    <p class="section-sub">What our guests are saying</p>
+  </div>
+
+  <!-- Public approved reviews display -->
+  <div id="publicReviewsList" style="max-width:860px;margin:0 auto 3.5rem">
+    <div style="text-align:center;color:rgba(245,240,232,.25);font-size:.82rem;padding:2rem 0" id="publicReviewsEmpty">Loading reviews...</div>
+  </div>
+
+  <!-- Divider -->
+  <div style="max-width:600px;margin:0 auto 2.5rem;border-top:1px solid rgba(201,168,76,.15);padding-top:2.5rem">
+    <div style="text-align:center;margin-bottom:1.8rem">
+      <span class="section-tag">Write a Review</span>
+      <h3 style="font-family:var(--serif);font-size:1.6rem;font-weight:300;color:var(--cream);margin-top:.5rem">Share Your <em style="color:var(--gold);font-style:italic">Experience</em></h3>
+    </div>
+  </div>
+
+  <!-- Submit form -->
+  <div style="max-width:600px;margin:0 auto">
+    <div class="form-row-2 reveal">
+      <div class="form-group"><label class="form-label">Your Name *</label><input class="form-input" id="revName" placeholder="Your name"/></div>
+      <div class="form-group">
+        <label class="form-label">Reviewing *</label>
+        <select class="form-input" id="revCategory" style="background:rgba(245,240,232,.05);color:var(--cream);cursor:pointer">
+          <option value="" style="background:#1a1008">Select a category</option>
+          <option value="Food & Dishes" style="background:#1a1008">🍜 Food & Dishes</option>
+          <option value="Service" style="background:#1a1008">🤝 Service</option>
+          <option value="Website" style="background:#1a1008">💻 Website</option>
+          <option value="Overall Experience" style="background:#1a1008">⭐ Overall Experience</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group reveal rd1" style="margin-bottom:.9rem">
+      <label class="form-label">Rating *</label>
+      <div id="starRow" style="display:flex;gap:.6rem;margin-top:.5rem">
+        <span class="rev-star" data-val="1" onclick="setStars(1)">☆</span>
+        <span class="rev-star" data-val="2" onclick="setStars(2)">☆</span>
+        <span class="rev-star" data-val="3" onclick="setStars(3)">☆</span>
+        <span class="rev-star" data-val="4" onclick="setStars(4)">☆</span>
+        <span class="rev-star" data-val="5" onclick="setStars(5)">☆</span>
+      </div>
+    </div>
+    <div class="form-group reveal rd2" style="margin-bottom:.8rem">
+      <label class="form-label">Your Review *</label>
+      <textarea class="form-input" id="revBody" rows="5" placeholder="Tell us about your experience..."></textarea>
+    </div>
+    <div id="revErr" style="font-size:.72rem;color:#e06060;min-height:1rem;margin-bottom:.3rem"></div>
+    <button class="contact-submit reveal rd3" onclick="submitReview()">Submit Review →</button>
+    <p style="font-size:.68rem;color:rgba(245,240,232,.2);text-align:center;margin-top:.8rem">Reviews are visible after approval</p>
+  </div>
+</section>
+
 <footer>
   <div class="footer-grid">
     <div>
@@ -804,7 +981,10 @@ function renderDishes() {
         <div class="dish-desc">${d.desc}</div>
         <div class="dish-footer">
           <div class="dish-price">${d.price}</div>
-          <button class="dish-order-btn" onclick="scrollToOrder('${d.name}','${d.price}')">Order Now →</button>
+          <div style="display:flex;gap:.5rem">
+            <button class="dish-order-btn" onclick="scrollToOrder('${d.name}','${d.price}')">Order →</button>
+            <button class="dish-review-btn" onclick="scrollToReview('${d.name}')">Review →</button>
+          </div>
         </div>
       </div>
     </div>`).join('');
@@ -953,6 +1133,21 @@ function scrollToOrder(name, price) {
   setTimeout(() => addToCart(name, price), 600);
 }
 
+function scrollToReview(dishName) {
+  // scroll to the visit/contact section where review form lives
+  document.getElementById('leave-review').scrollIntoView({ behavior: 'smooth' });
+  // pre-select "Food & Dishes" category and hint the dish name
+  setTimeout(() => {
+    const cat = document.getElementById('revCategory');
+    if(cat) cat.value = 'Food & Dishes';
+    const body = document.getElementById('revBody');
+    if(body) {
+      body.placeholder = 'Tell us about the ' + dishName + '...';
+      body.focus();
+    }
+  }, 700);
+}
+
 function addToCartAndScroll(btn) {
   const name  = btn.getAttribute('data-name');
   const price = btn.getAttribute('data-price');
@@ -1051,6 +1246,7 @@ async function syncPublicData() {
     if (changed) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(siteData));
       renderAll();
+  loadPublicReviews();
     }
   } catch(e) { /* Cloud unavailable — default content already showing */ }
 }
@@ -1193,9 +1389,113 @@ function scrollMenuSec(id, link) {
 // Init — load local data immediately, then pull latest from Supabase cloud
 document.addEventListener('DOMContentLoaded', () => {
   renderAll();
+  loadPublicReviews();
   document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
   syncPublicData();
 });
+
+
+// ─── REVIEW ─────────────────────────────────
+let reviewStars = 0;
+
+function setStars(val) {
+  reviewStars = val;
+  document.querySelectorAll('.rev-star').forEach(s => {
+    s.classList.toggle('active', parseInt(s.getAttribute('data-val')) <= val);
+  });
+}
+
+async function submitReview() {
+  const name     = (document.getElementById('revName')?.value || '').trim();
+  const category = (document.getElementById('revCategory')?.value || '').trim();
+  const body     = (document.getElementById('revBody')?.value || '').trim();
+  const errEl    = document.getElementById('revErr');
+
+  if (!name)      { if(errEl) errEl.textContent = 'Please enter your name.'; return; }
+  if (!category)  { if(errEl) errEl.textContent = 'Please select a category.'; return; }
+  if (!reviewStars){ if(errEl) errEl.textContent = 'Please select a star rating.'; return; }
+  if (!body)      { if(errEl) errEl.textContent = 'Please write your review.'; return; }
+  if(errEl) errEl.textContent = '';
+
+  const btn = document.querySelector('.contact-submit');
+  if(btn) { btn.textContent = 'Submitting...'; btn.disabled = true; }
+
+  try {
+    // Save to dedicated reviews table — status pending until admin approves
+    await fetch(SUPABASE_URL + '/rest/v1/kawanoya_reviews', {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        reviewer_name: name,
+        category:      category,
+        stars:         reviewStars,
+        body:          body,
+        status:        'pending',
+        created_at:    new Date().toISOString()
+      })
+    });
+    // Also notify admin via orders table
+    await saveNotif({
+      order_id: 'REV-' + Date.now().toString().slice(-4),
+      order_type: 'Review', kind: 'review',
+      items: category + ' | ' + '⭐'.repeat(reviewStars) + ' | ' + body,
+      total: reviewStars + '/5 stars',
+      customer_name: name, customer_phone: '',
+      status: 'new', created_at: new Date().toISOString()
+    });
+  } catch(e) {}
+
+  ['revName','revBody'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  document.getElementById('revCategory').value = '';
+  setStars(0); reviewStars = 0;
+  if(btn) { btn.textContent = 'Submit Review →'; btn.disabled = false; }
+  showToast('Review Submitted ✓', 'Thank you! Your review will appear after approval.');
+}
+
+// ── Load approved public reviews ──────────────────────────────────────────────
+function timeAgo(dateStr) {
+  const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+  if (diff < 60)   return 'just now';
+  if (diff < 3600) return Math.floor(diff/60) + ' minutes ago';
+  if (diff < 86400)return Math.floor(diff/3600) + ' hours ago';
+  if (diff < 604800) return Math.floor(diff/86400) + ' days ago';
+  if (diff < 2592000)return Math.floor(diff/604800) + ' weeks ago';
+  return Math.floor(diff/2592000) + ' months ago';
+}
+
+async function loadPublicReviews() {
+  const cont  = document.getElementById('publicReviewsList');
+  const empty = document.getElementById('publicReviewsEmpty');
+  if (!cont) return;
+  try {
+    const r = await fetch(SUPABASE_URL + '/rest/v1/kawanoya_reviews?status=eq.approved&order=created_at.desc', {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY }
+    });
+    const rows = await r.json();
+    if (!rows || !rows.length) {
+      if(empty) empty.textContent = 'No reviews yet — be the first!';
+      return;
+    }
+    if(empty) empty.style.display = 'none';
+    cont.innerHTML = rows.map(rv => `
+      <div class="pub-rev-card">
+        <div class="pub-rev-top">
+          <div>
+            <div class="pub-rev-name">${rv.reviewer_name}</div>
+            <div class="pub-rev-cat">${rv.category}</div>
+          </div>
+          <div class="pub-rev-meta">
+            <div class="pub-rev-stars">${'★'.repeat(rv.stars)}${'☆'.repeat(5-rv.stars)}</div>
+            <div class="pub-rev-time">${timeAgo(rv.created_at)}</div>
+          </div>
+        </div>
+        <div class="pub-rev-body">"${rv.body}"</div>
+      </div>`).join('');
+  } catch(e) {
+    if(empty) empty.textContent = 'Could not load reviews.';
+  }
+}
 
 </script>
 </body>
